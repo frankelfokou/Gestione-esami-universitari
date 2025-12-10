@@ -6,7 +6,7 @@
 
 🧰**Tecnologie usate**:
 - Docker
-- Oracle
+- Postgres
 
 
 📋**TO DO**(non in ordine):
