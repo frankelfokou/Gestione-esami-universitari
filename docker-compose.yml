@@ -1,0 +1,46 @@
+services:
+  # 1. FRONTEND & WEB SERVER
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: esami_frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./client:/usr/share/nginx/html
+      - ./client/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
+  # 2. BACKEND (PHP)
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: esami_backend
+    volumes:
+      - ./server:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: gestione_esami
+      DB_USER: user_esami
+      DB_PASS: pass_esami
+
+  # 3. DATABASE (PostgreSQL)
+  db:
+    build:
+      context: ./sql
+      dockerfile: Dockerfile
+    container_name: esami_db
+    environment:
+      POSTGRES_DB: gestione_esami
+      POSTGRES_USER: user_esami
+      POSTGRES_PASSWORD: pass_esami
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
