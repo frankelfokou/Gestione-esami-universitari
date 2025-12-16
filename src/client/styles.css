@@ -1,0 +1,47 @@
+:root {
+    --primary-purple: #512da8; /* Il viola scuro del footer/header */
+    --secondary-purple: #9575cd; /* Il viola chiaro dei bottoni laterali */
+    --bg-color: #d1c4e9; /* Lo sfondo lilla generale */
+    --row-grey: #e0e0e0; /* Grigio delle righe */
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Override colori custom */
+.bg-primary-custom {
+    background-color: var(--primary-purple) !important;
+}
+.text-primary-custom {
+    color: var(--primary-purple) !important;
+}
+
+.bg-secondary-custom {
+    background-color: var(--secondary-purple) !important;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Stile tabella */
+.table-container {
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Righe alternate (Striped) come da immagine */
+#examTable tbody tr:nth-of-type(odd) {
+    background-color: white;
+}
+#examTable tbody tr:nth-of-type(even) {
+    background-color: var(--row-grey);
+}
+
+/* Bottone Aggiungi */
+.add-bar {
+    cursor: pointer;
+}
+.add-bar:hover {
+    filter: brightness(1.2);
+}
