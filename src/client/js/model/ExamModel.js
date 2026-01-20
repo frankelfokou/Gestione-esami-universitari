@@ -42,7 +42,7 @@ export class ExamModel {
     remove(id) {
         return new Promise((resolve) => {
             this.esami = this.esami.filter(e => e.id !== id);
-            console.log(🗑️ [MOCK DB] Esame ${id} eliminato);
+            console.log("[MOCK DB] Esame ${id} eliminato");
             resolve({ success: true });
         });
     }
