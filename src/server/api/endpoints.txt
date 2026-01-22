@@ -1,0 +1,3 @@
+login POST loginEP
+register POST registerEP
+esami GET esamiEP
