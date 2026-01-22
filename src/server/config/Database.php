@@ -28,3 +28,5 @@ final class Database
         return $this->pdo;
     }
 }
+
+?>
