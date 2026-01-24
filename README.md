@@ -10,14 +10,14 @@
 
 
 📋**TO DO**(non in ordine):
-- [] Database
+- [ ] Database
     - [x] Logica
         - [x] Entità
         - [x] Relazioni
         - [x] Schema ER
-    - [] Sviluppo
+    - [ ] Sviluppo
         - [x] init file
-        - [] repository
-        - [] query
-- [] Frontend
-- [] Backend
+        - [ ] repository
+        - [ ] query
+- [ ] Frontend
+- [ ] Backend
