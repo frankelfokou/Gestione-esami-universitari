@@ -1,6 +1,6 @@
 <?php
 
-final class Database
+final class DatabasePDO
 {
     private PDO $pdo;
 
