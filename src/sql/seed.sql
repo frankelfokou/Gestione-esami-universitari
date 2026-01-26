@@ -18,7 +18,7 @@ RESTART IDENTITY CASCADE;
 -- UTENTI (date >= 2008-01-01 come da CHECK)
 -- -------------------------
 INSERT INTO "applicazione"."utente"
-("utente_ID","nome","cognome","data_di_nascita","email","password")
+("utente_id","nome","cognome","data_di_nascita","email","password")
 OVERRIDING SYSTEM VALUE
 VALUES
   (1,'Luca','Rossi','2008-02-14','luca.rossi@example.com','$2y$10$fakehash1'),
@@ -31,11 +31,11 @@ VALUES
 -- CORSI
 -- Constraint: base_laurea=60, scala_voto=110 (come inteso dal tuo CHECK)
 -- Campo "insegnamenti" nel tuo schema è integer e viene usato dalla FK invertita:
--- insegnamento.insegnamento_ID -> corso.insegnamenti
--- quindi qui metto insegnamenti = 201/202/203 così poi posso creare insegnamenti con quegli ID.
+-- insegnamento.insegnamento_id -> corso.insegnamenti
+-- quindi qui metto insegnamenti = 201/202/203 così poi posso creare insegnamenti con quegli id.
 -- -------------------------
 INSERT INTO "applicazione"."corso"
-("corso_ID","nome","insegnamenti","tipo","base_laurea","scala_voto","cfu_totali")
+("corso_id","nome","insegnamenti","tipo","base_laurea","scala_voto","cfu_totali")
 OVERRIDING SYSTEM VALUE
 VALUES
   (101,'Informatica',201,'LT',60,110,180),
@@ -44,11 +44,11 @@ VALUES
 
 -- -------------------------
 -- CARRIERE
--- Nota: qui "corso" è solo un integer (FK è sull'altra tabella: corso.corso_ID -> carriera.corso)
+-- Nota: qui "corso" è solo un integer (FK è sull'altra tabella: corso.corso_id -> carriera.corso)
 -- quindi preparo valori corso = 101/102/103 che userò dopo in "corso".
 -- -------------------------
 INSERT INTO "applicazione"."carriera"
-("carriera_ID","studente","corso","stato","data_inizio","data_fine")
+("carriera_id","studente","corso","stato","data_inizio","data_fine")
 OVERRIDING SYSTEM VALUE
 VALUES
   (1,1,101,'ATTIVA','2025-10-01',NULL),
@@ -61,13 +61,13 @@ VALUES
 
 -- -------------------------
 -- INSEGNAMENTI
--- FK invertita: insegnamento_ID deve esistere come valore in corso.insegnamenti
+-- FK invertita: insegnamento_id deve esistere come valore in corso.insegnamenti
 -- quindi creo almeno 201/202/203 (poi aggiungo altri insegnamenti "normali" senza vincolo,
 -- ma ATTENZIONE: con la tua FK così com'è, anche quelli dovrebbero matchare un corso.insegnamenti.
--- Per non rompere la FK, tengo SOLO ID che matchano 201/202/203.
+-- Per non rompere la FK, tengo SOLO id che matchano 201/202/203.
 -- -------------------------
 INSERT INTO "applicazione"."insegnamento"
-("insegnamento_ID","corso","nome","cfu","anno","obbligatorio")
+("insegnamento_id","corso","nome","cfu","anno","obbligatorio")
 OVERRIDING SYSTEM VALUE
 VALUES
   (201,101,'BasiDati',12,2,true),
@@ -75,10 +75,10 @@ VALUES
   (203,103,'Analisi1',12,1,true);
 
 -- -------------------------
--- ESAMI (FK normale: esame.insegnamento -> insegnamento.insegnamento_ID)
+-- ESAMI (FK normale: esame.insegnamento -> insegnamento.insegnamento_id)
 -- -------------------------
 INSERT INTO "applicazione"."esame"
-("esame_ID","insegnamento","data_esame")
+("esame_id","insegnamento","data_esame")
 OVERRIDING SYSTEM VALUE
 VALUES
   (1,201,'2025-01-20'),
