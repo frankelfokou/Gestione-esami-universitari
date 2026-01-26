@@ -9,6 +9,8 @@ export class ExamPresenter {
     
     async init() {
         this.view.bindAddExam(this.handleAddExam.bind(this));
+
+        this.view.bindDeleteExam(this.handleDeleteExam.bind(this));
         
         
         await this.refresh();
@@ -34,5 +36,11 @@ export class ExamPresenter {
     async handleAddExam(esame) {
         await this.model.add(esame);
         await this.refresh();
+    }
+
+    async handleDeleteExam(id) {
+
+    await this.model.remove(id);
+    await this.refresh();
     }
 }
