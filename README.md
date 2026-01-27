@@ -4,6 +4,9 @@
 >calcolare la media (aritmetica e ponderata) e proiettare il voto di laurea. Input voti/CFU, calcoli
 >statistici, grafici (frontend JS), salvataggio "carriera" utente.  
 
+**Suddivisione Lavoro**
+- Componente Database: Victor Danilov
+
 🧰**Tecnologie usate**:
 - Docker
 - Postgres
