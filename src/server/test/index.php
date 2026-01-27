@@ -6,6 +6,8 @@
   <title>Test index</title>
 </head>
 <body>
-  <a href="./Router_test.php">Test Page for Router</a>
+  <a href="./Router_test.php">Test Page for Router</a><br>
+  <a href="./db_test.php">Test Page for Database</a><br>
+  <a href="./db_repo_test.php">Test Page for Repositories</a><br>
 </body>
 </html>
