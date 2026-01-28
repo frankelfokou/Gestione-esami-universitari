@@ -18,6 +18,9 @@ export class ExamView {
                 <td>${esame.voto}${esame.lode ? 'L' : ''}</td>
                 <td>${esame.data}</td>
                 <td>${esame.cfu}</td>
+                <td>
+                <button class="btn-delete" data-id="${esame.id}">🗑</button>
+                </td>
             `;
             this.tableBody.appendChild(row);
         });
@@ -39,4 +42,13 @@ export class ExamView {
             }
         });
     }
+    
+    bindDeleteExam(handler) {
+    this.tableBody.addEventListener('click', (event) => {
+        if (event.target.classList.contains('btn-delete')) {
+            const id = parseInt(event.target.dataset.id);
+            handler(id);
+        }
+    });
+}
 }
