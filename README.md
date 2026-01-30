@@ -7,6 +7,7 @@
 **Suddivisione Lavoro**
 - Componente Database: Victor Danilov
 - Sviluppo Frontend - MVP: Artjoms Ginglats
+- Routing System: Haxhi Teku
 
 🧰**Tecnologie usate**:
 - Docker
