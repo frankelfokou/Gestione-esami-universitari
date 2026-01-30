@@ -1,0 +1,33 @@
+.test_name {
+  display: inline-block;
+  padding: 6px;
+  margin: 12px auto;
+  background-color: hsl(0, 0%, 86%);
+  border: solid 2px hsl(0, 0%, 29%);
+  border-radius: 6px;
+  font-size: 18px;
+}
+
+.success {
+  display: block;
+  width: 800px;
+  padding: 6px;
+  margin: 6px auto;
+  margin-left: 0px;
+  margin-right: 0px;
+  background-color: hsl(141, 71%, 60%);
+  border: solid 2px hsl(141, 71%, 48%);
+  border-radius: 6px;
+}
+
+.fail {
+  display: block;
+  width: 800px;
+  padding: 6px;
+  margin: 6px auto;
+  margin-left: 0px;
+  margin-right: 0px;
+  background-color: hsl(348, 100%, 74%);
+  border: solid 2px hsl(348, 100%, 61%);
+  border-radius: 6px;
+}

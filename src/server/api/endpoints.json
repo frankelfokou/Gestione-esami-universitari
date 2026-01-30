@@ -1,0 +1,17 @@
+{
+  "login": { 
+    "url": "login",
+    "method": "GET",
+    "callback": "loginEP"
+  },
+  "register": { 
+    "url": "register",
+    "method": "POST",
+    "callback": "registerEP"
+  },
+  "esami": { 
+    "url": "esami",
+    "method": "GET",
+    "callback": "esamiEP"
+  }
+}
