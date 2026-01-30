@@ -4,13 +4,20 @@ require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
 require_once __DIR__ . '/strategies/MediaAritmetica.php';
 require_once __DIR__ . '/strategies/MediaPonderata.php';
 
+require_once dirname(__DIR__) . '/repository/EsameRepository.php';
+
 function statsEP()
 {
     header('Content-Type: application/json');
     try {
         $db = new DatabaseWrapper((new DatabasePDO())->pdo());
+        $esameRepo = new EsameRepository($db);
 
-        $esami = $db->fetchAll("SELECT * FROM applicazione.esame");
+        // SECURITY SIMULATION: Assuming user ID 1 is logged in
+        $userId = 1;
+
+        // Use repository to find exams for this student
+        $esami = $esameRepo->findByStudent($userId);
 
         $mediaAritmeticaStrategy = new MediaAritmetica();
         $mediaPonderataStrategy = new MediaPonderata();
