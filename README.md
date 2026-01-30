@@ -25,7 +25,7 @@
         - [ ] repository
         - [ ] query
 - [ ] Frontend
-    - [x]Sviluppo
-        - [x]MVP
+    - [x] Sviluppo
+        - [x] MVP
 
 - [ ] Backend
