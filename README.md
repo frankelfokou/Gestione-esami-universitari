@@ -8,6 +8,7 @@
 - Componente Database: Victor Danilov
 - Sviluppo Frontend - MVP: Artjoms Ginglats
 - Routing System: Haxhi Teku
+- Statistiche esami: Fokou Frankel
 
 🧰**Tecnologie usate**:
 - Docker
