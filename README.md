@@ -6,6 +6,7 @@
 
 **Suddivisione Lavoro**
 - Componente Database: Victor Danilov
+- Sviluppo Frontend - MVP: Artjoms Ginglats
 
 🧰**Tecnologie usate**:
 - Docker
@@ -23,4 +24,7 @@
         - [ ] repository
         - [ ] query
 - [ ] Frontend
+    - [x]Sviluppo
+        - [x]MVP
+
 - [ ] Backend
