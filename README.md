@@ -146,36 +146,35 @@ REFERENCES "applicazione"."utente" ("utente_ID");
 Questa sezione visualizza l'architettura e i flussi del sistema tramite diagrammi UML.
 
 ### 6.1 Diagramma delle Classi (Design Pattern Strategy)
-
 Illustra la struttura del pattern Strategy per il calcolo delle medie, garantendo estensibilità e rispetto del principio Open/Closed.
 
 ```mermaid
 classDiagram
     class MediaStrategy {
-        <<interface>>
-        +calcola(esami: array): float
+        calcola(esami) float
     }
+    <<interface>> MediaStrategy
 
     class MediaAritmetica {
-        +calcola(esami: array): float
+        calcola(esami) float
     }
 
     class MediaPonderata {
-        +calcola(esami: array): float
+        calcola(esami) float
     }
 
     class MediaPrevisionale {
-        +calcola(mediaCorrente: float, cfuFatti: int, ...): float
+        calcola(media, cfu, target) float
     }
 
     class StatsController {
-        +statsEP()
+        statsEP()
     }
 
     MediaStrategy <|.. MediaAritmetica
     MediaStrategy <|.. MediaPonderata
     MediaStrategy <|.. MediaPrevisionale
-    StatsController ..> MediaStrategy : Uses
+    StatsController ..> MediaStrategy
 ```
 
 ### 6.2 Diagramma di Sequenza (Flusso Auth & Statistiche)
