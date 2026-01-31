@@ -22,6 +22,7 @@ function sanitize_url($url): string
 
 require_once __DIR__ . '/stats.php';
 require_once __DIR__ . '/login.php';
+require_once __DIR__ . '/logout.php';
 
 $uri = sanitize_url($_SERVER['REQUEST_URI']);
 $method = $_SERVER['REQUEST_METHOD'];

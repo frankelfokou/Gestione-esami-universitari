@@ -1,22 +1,18 @@
 <?php
-require_once dirname(path: __DIR__) . '/config/DatabasePDO.php';
-require_once dirname(path: __DIR__) . '/config/DatabaseWrapper.php';
+require_once dirname(__DIR__) . '/config/DatabasePDO.php';
+require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
 require_once __DIR__ . '/strategies/MediaAritmetica.php';
 require_once __DIR__ . '/strategies/MediaPonderata.php';
-
-require_once dirname(path: __DIR__) . '/repository/EsameRepository.php';
+require_once __DIR__ . '/strategies/MediaPrevisionale.php';
+require_once __DIR__ . '/middleware/AuthMiddleware.php';
+require_once dirname(__DIR__) . '/repository/EsameRepository.php';
 
 function statsEP(): void
 {
     header(header: 'Content-Type: application/json');
 
-    session_start();
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized']);
-        return;
-    }
-    $userId = $_SESSION['user_id'];
+    // Authentication via Middleware
+    $userId = AuthMiddleware::isAuthenticated();
 
     try {
         $db = new DatabaseWrapper((new DatabasePDO())->pdo());
@@ -27,6 +23,7 @@ function statsEP(): void
 
         $mediaAritmeticaStrategy = new MediaAritmetica();
         $mediaPonderataStrategy = new MediaPonderata();
+        $mediaPrevisionaleStrategy = new MediaPrevisionale();
 
         $mediaA = $mediaAritmeticaStrategy->calcola($esami);
         $mediaP = $mediaPonderataStrategy->calcola($esami);
@@ -39,11 +36,17 @@ function statsEP(): void
         // Proiezione voto di laurea: (Media Ponderata * 110) / 30
         $proiezione = ($mediaP * 110) / 30;
 
+        // Forecast: Goal 110L (or just 110)
+        // Assuming Bachelor degree (180 CFU total)
+        $cfuTotaliCorso = 180;
+        $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
+
         echo json_encode(value: [
             'mediaA' => $mediaA,
             'mediaP' => $mediaP,
             'proiezione' => $proiezione,
-            'cfuTotali' => $totCFU
+            'cfuTotali' => $totCFU,
+            'previsione110' => $mediaFutura
         ]);
 
     } catch (Exception $e) {

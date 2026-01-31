@@ -1,71 +1,66 @@
-# Documentazione Progetto: Gestione Esami (Modulo Statistiche & Sicurezza)
+# Documentazione Completa: Gestione Esami (Modulo Statistiche & Sicurezza)
 
-Questo documento dettaglia l'implementazione delle nuove funzionalità relative al calcolo delle statistiche, alla gestione della sicurezza multi-utente e alle scelte architetturali adottate.
-
-## 1. Funzionalità Implementate
-
-### 1.1 Calcolo Statistiche (`/metrics`)
-Il sistema ora fornisce un endpoint per calcolare automaticamente:
-*   **Media Aritmetica**: La media semplice dei voti (somma voti / numero esami).
-*   **Media Ponderata**: La media pesata sui Crediti Formativi Universitari (CFU).
-*   **Proiezione Voto di Laurea**: Stima basata sulla media ponderata `(Media Ponderata * 110) / 30`.
-*   **Totale CFU**: Somma dei crediti acquisiti.
-
-### 1.2 Sistema di Autenticazione (`/auth`)
-Per garantire la privacy e la corretta attribuzione dei dati in un contesto multi-utente demo:
-*   **Login Endpoint**: Permette l'autenticazione tramite email e password.
-*   **Gestione Sessioni**: Utilizzo di sessioni PHP server-side per mantenere lo stato di login.
-*   **Protezione Route**: Gli endpoint sensibili (come le statistiche) verificano l'identità dell'utente prima di procedere.
-
-### 1.3 Multi-tenancy (Supporto Multi-utente)
-Il database e il layer di accesso ai dati sono stati aggiornati per associare ogni esame allo studente che lo ha sostenuto, garantendo l'isolamento dei dati.
+Questo documento costituisce il riferimento tecnico completo per le implementazioni relative ai moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del progetto Gestione Esami.
 
 ---
 
-## 2. Architettura Tecnica e Design Pattern
+## 1. Funzionalità Implementate
 
-L'implementazione segue principi di progettazione software robusti per garantire manutenibilità ed estensibilità.
+### 1.1 Analytics & Forecasting (`/metrics`)
+Il modulo statistiche non si limita a riportare dati storici, ma offre strumenti per la pianificazione della carriera universitaria.
+1.  **Media Aritmetica**: Calcolo standard `(Somma Voti / N. Esami)`.
+2.  **Media Ponderata**: Calcolo pesato `(Somma (Voto*CFU) / Tot CFU)`. Essenziale per il voto di laurea.
+3.  **Proiezione Voto di Laurea**: Stima del voto di partenza basata sulla media ponderata attuale `(Media Ponderata * 110) / 30`.
+4.  **Forecasting Strategico (NEW)**: Risponde alla domanda *"Che media devo mantenere nei prossimi esami per laurearmi con 110?"*. Calcola il target medio richiesto sui CFU residui.
 
-### 2.1 Strategy Pattern (Calcolo Medie)
-**Descrizione**: Il calcolo delle medie è stato incapsulato in classi separate che implementano un'interfaccia comune.
+### 1.2 Sicurezza & Multi-tenancy (`/auth`)
+Il sistema è stato trasformato da single-user a multi-user sicuro.
+1.  **Autenticazione**: Login sicuro con gestione sessioni.
+2.  **Isolamento Dati**: Ogni studente vede esclusivamente i propri voti.
+3.  **Logout**: Procedura di chiusura sessione e pulizia cookie.
 
-**Componenti**:
-*   `MediaStrategy` (Interface): Contratto `calcola(array $esami): float`.
-*   `MediaAritmetica` (Concrete): Algoritmo media semplice.
-*   `MediaPonderata` (Concrete): Algoritmo media pesata.
+---
 
-**Esempio Codice**:
+## 2. Architettura & Design Pattern
+
+L'architettura è stata progettata per massimizzare la separazione delle responsabilità (SoC).
+
+### 2.1 Middleware Pattern (Security Layer)
+**Problema**: Duplicazione del codice di controllo sessione in ogni endpoint. Rischio di dimenticare la protezione su nuove API.
+**Soluzione**: Introduzione di un `AuthMiddleware` che intercetta la richiesta prima che arrivi al controller.
+
 ```php
-// src/server/api/strategies/MediaPonderata.php
-class MediaPonderata implements MediaStrategy {
-    public function calcola(array $esami): float {
-        $sommaPonderata = 0;
-        $totCFU = 0;
-        foreach ($esami as $esame) {
-            $sommaPonderata += ($esame['voto'] * $esame['cfu']);
-            $totCFU += $esame['cfu'];
+// src/server/api/middleware/AuthMiddleware.php
+class AuthMiddleware {
+    public static function isAuthenticated(): int {
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401); // Blocca la richiesta qui
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
         }
-        return $totCFU > 0 ? $sommaPonderata / $totCFU : 0;
+        return $_SESSION['user_id']; // Passa il controllo ritornando l'ID
     }
 }
 ```
 
-**Giustificazione**:
-*   **Estensibilità**: Se in futuro si volesse aggiungere una "Media Aritmetica senza i 2 voti peggiori", basterebbe creare una nuova classe senza toccare il codice esistente (Open/Closed Principle).
-*   **Testabilità**: Ogni algoritmo può essere testato unitariamente in isolamento.
+### 2.2 Strategy Pattern (Business Logic Layer)
+**Problema**: La logica di calcolo delle medie (Aritmetica, Ponderata, Previsionale) varia e potrebbe arricchirsi (es. "Media senza i 2 voti peggiori"). Inserirla tutta nel controller creerebbe un "God Object".
+**Soluzione**: Incapsulare ogni algoritmo in una classe dedicata che implementa un'interfaccia comune o segue una firma standard.
 
-### 2.2 Repository Pattern (Accesso ai Dati)
-**Descrizione**: L'accesso diretto al database nei controller/API è stato sostituito da classi Repository dedicate.
+*   `MediaAritmetica`: `calcola($esami)`
+*   `MediaPonderata`: `calcola($esami)`
+*   `MediaPrevisionale`: `calcola($mediaCorrente, $cfuFatti, ...)`
 
-**Componenti**:
-*   `EsameRepository`: Gestisce le operazioni sulla tabella `esame`.
-*   `UtenteRepository`: Gestisce le operazioni sulla tabella `utente` (es. login).
+**Vantaggio**: Rispetto dell'Open/Closed Principle. Possiamo aggiungere strategie senza modificare il codice esistente.
 
-**Esempio Codice**:
+### 2.3 Repository Pattern (Data Access Layer)
+**Problema**: Query SQL sparse nel codice API rendono difficile la manutenzione dello schema DB e il testing.
+**Soluzione**: Tutte le query sono centralizzate in classi `Repository`.
+
 ```php
 // src/server/repository/EsameRepository.php
 public function findByStudent(int $studenteId): array {
-    // Esegue una query filtrata, garantendo l'isolamento dei dati
+    // La query garantisce l'isolamento dei dati a livello SQL
     return $this->db->fetchAll(
         "SELECT * FROM applicazione.esame WHERE studente = :id", 
         ['id' => $studenteId]
@@ -73,48 +68,62 @@ public function findByStudent(int $studenteId): array {
 }
 ```
 
-**Giustificazione**:
-*   **Sicurezza**: Centralizza le query SQL, riducendo il rischio di injection e di errori logici (es. dimenticare la clausola WHERE).
-*   **Disaccoppiamento**: La logica di business (API) non dipende dai dettagli dello schema database.
+---
 
-### 2.3 Gestione Sessioni (Sicurezza)
-**Descrizione**: Utilizzo delle sessioni native di PHP per tracciare l'utente autenticato.
+## 3. Flussi di Lavoro e Confini di Competenza
 
-**Flusso**:
-1.  **Login (`POST /api/login`)**: Verifica email/password. Se OK, `session_start()` e `$_SESSION['user_id'] = $id`.
-2.  **Stats (`GET /api/stats`)**: Chiama `session_start()`. Se `$_SESSION['user_id']` manca, ritorna `401 Unauthorized`.
+Di seguito l'analisi dettagliata dei flussi, evidenziando dove intervengono i moduli Statistiche/Sicurezza.
 
-**Giustificazione**:
-*   **Standard**: Meccanismo collaudato e sicuro per applicazioni web stateful.
-*   **Semplicità**: Evita la complessità di gestire token JWT sul client per questo stadio del progetto.
+### A. Flusso di Login (Auth)
+1.  **Client (Frontend)**: Invia POST a `/login` con email/password.
+2.  **Router**: Instrada a `loginEP`.
+3.  **Sicurezza (Inizio Competenza)**:
+    *   `UtenteRepository`: Cerca l'hash della password per l'email fornita.
+    *   `loginEP`: Verifica `password_verify($input, $hash)`.
+    *   Se OK: `session_start()` e rigenerazione ID sessione (prevenzione Session Fixation).
+4.  **Sicurezza (Fine Competenza)**: Restituisce 200 OK con Cookie `PHPSESSID`.
+
+### B. Flusso Consultazione Statistiche (Analytics)
+1.  **Client (Frontend)**: Effettua GET a `/stats` (il browser allega automaticamente il Cookie).
+2.  **Router**: Instrada a `statsEP`.
+3.  **Sicurezza (Intervento)**: 
+    *   Chiama `AuthMiddleware::isAuthenticated()`.
+    *   Verifica validità sessione server-side.
+    *   Estrae `user_id`.
+4.  **Statistiche (Inizio Competenza)**: 
+    *   **Data Retrieval**: Chiama `EsameRepository::findByStudent($userId)` (Query filtrata).
+    *   **Computation**: Istanzia le Strategie (`MediaAritmetica`, `MediaPonderata`, `MediaPrevisionale`).
+    *   **Execution**: Esegue i calcoli sui dati grezzi recuperati.
+5.  **Statistiche (Fine Competenza)**: Formatta il JSON di risposta:
+    ```json
+    { "mediaA": 27.5, "mediaP": 27.8, "previsione110": 28.2 }
+    ```
+6.  **Client**: Riceve i dati e aggiorna la Dashboard.
 
 ---
 
-## 3. Modifiche al Database
+## 4. Modifiche al Database
 
-Per supportare le funzionalità sopra descritte, lo schema del database (`src/sql/init.sql`) è stato modificato:
+Per supportare questi flussi, lo schema (`src/sql/init.sql`) è stato evoluto.
 
-### 3.1 Tabella `esame`
-È stata aggiunta la relazione con l'utente per supportare la multi-utenza.
-
+### Relazione `esame` -> `utente`
+È stata introdotta una FK per abilitare il filtro per studente.
 ```sql
 ALTER TABLE "applicazione"."esame" 
-ADD COLUMN "studente" INTEGER NOT NULL;
-
-ALTER TABLE "applicazione"."esame" 
-ADD CONSTRAINT "esame_studente" 
-FOREIGN KEY ("studente") REFERENCES "applicazione"."utente" ("utente_ID");
+ADD COLUMN "studente" INTEGER NOT NULL 
+REFERENCES "applicazione"."utente" ("utente_ID");
 ```
 
 ---
 
-## 4. Riepilogo File Modificati/Creati
+## 5. Riepilogo Componenti
 
-| File | Scopo |
-| :--- | :--- |
-| `src/server/api/stats.php` | Endpoint statistiche. Ora protetto da sessione. |
-| `src/server/api/login.php` | [NEW] Endpoint di autenticazione. |
-| `src/server/api/strategies/*` | [NEW] Classi Strategy per il calcolo delle medie. |
-| `src/server/repository/EsameRepository.php` | [NEW] Astrazione accesso dati esami. |
-| `src/sql/init.sql` | Aggiornato schema con colonna `studente`. |
-| `src/server/api/endpoints.txt` | Mappatura rotte (`stats`, `login`). |
+| Modulo | Componente | Descrizione |
+| :--- | :--- | :--- |
+| **Sicurezza** | `AuthMiddleware` | Interceptor per protezione endpoint. |
+| **Sicurezza** | `login.php` / `logout.php` | Gestione ciclo di vita sessione. |
+| **Sicurezza** | `UtenteRepository` | Accesso dati anagrafici e credenziali. |
+| **Stats** | `stats.php` | Controller principale (Orchestrator). |
+| **Stats** | `MediaStrategy` Interface | Contratto per gli algoritmi. |
+| **Stats** | `MediaPrevisionale` etc. | Implementazioni concrete degli algoritmi. |
+| **Data** | `EsameRepository` | Accesso dati esami (con filtro sicurezza). |
