@@ -127,3 +127,38 @@ REFERENCES "applicazione"."utente" ("utente_ID");
 | **Stats** | `MediaStrategy` Interface | Contratto per gli algoritmi. |
 | **Stats** | `MediaPrevisionale` etc. | Implementazioni concrete degli algoritmi. |
 | **Data** | `EsameRepository` | Accesso dati esami (con filtro sicurezza). |
+
+---
+
+## 6. TODO: Diagrammi da Implementare
+
+Come da specifiche del corso di Ingegneria del Software, si raccomanda l'introduzione dei seguenti diagrammi UML per documentare visualmente il modulo.
+
+### 6.1 Diagramma delle Classi (Design Pattern Strategy)
+**Descrizione**: Illustrare la struttura del Strategy Pattern utilizzato per le statistiche.
+*   **Contenuto**: Interfaccia `MediaStrategy` ed ereditarietà verso `MediaAritmetica`, `MediaPonderata`, `MediaPrevisionale`. Relazione di dipendenza con la classe `Context` (ovvero il controller `statsEP`).
+*   **Rilevanza**: Fondamentale per mostrare la conformità ai principi SOLID e l'estensibilità del sistema.
+*   **File coinvolti**: `MediaStrategy.php` e implementazioni, `stats.php`.
+
+### 6.2 Diagramma di Sequenza (Flusso Autenticazione & Statistiche)
+**Descrizione**: Dettagliare l'interazione temporale degli oggetti durante una chiamata a `/stats`.
+*   **Contenuto**:
+    1.  Client -> `AuthMiddleware` (check sessione).
+    2.  `AuthMiddleware` -> `statsEP` (passaggio controllo).
+    3.  `statsEP` -> `EsameRepository` (query).
+    4.  `statsEP` -> `MediaStrategy` (calcolo).
+    5.  `statsEP` -> Client (risposta JSON).
+*   **Rilevanza**: Mostra chiaramente la sequenza di chiamate e il ruolo centrale del Middleware e del Repository.
+*   **File coinvolti**: `stats.php`, `AuthMiddleware.php`, `EsameRepository.php`.
+
+### 6.3 Diagramma dei Casi d'Uso (Attori e Funzionalità)
+**Descrizione**: Panoramica delle funzionalità offerte agli attori.
+*   **Contenuto**: Attore "Studente" collegato ai casi d'uso "Esegui Login", "Consulta Cruscotto Statistico", "Richiedi Previsione Voto".
+*   **Rilevanza**: Definisce i requisiti funzionali coperti dal modulo.
+*   **File coinvolti**: Visione d'insieme del sistema.
+
+### 6.4 Diagramma di Attività (Algoritmo di Previsione)
+**Descrizione**: Focus logico sull'algoritmo di `MediaPrevisionale`.
+*   **Contenuto**: Flusso decisionale (Start -> Calcolo CFU Mancanti -> Check se CFU Mancanti <= 0 -> Applicazione formula inversa -> Return).
+*   **Rilevanza**: Documenta la logica di business complessa (il Forecasting) separandola dall'implementazione codice.
+*   **File coinvolti**: `MediaPrevisionale.php`.
