@@ -48,6 +48,7 @@ CREATE TABLE "applicazione"."esame" (
   "cfu" integer NOT NULL,
   "lode" bool,
   "data_esame" date,
+  "studente" integer NOT NULL,
   CONSTRAINT "voto" CHECK (voto >= 18 & voto <= 30),
   CONSTRAINT "voto_con_lode" CHECK (voto >= 31 & voto <= 32)
 );
@@ -61,3 +62,5 @@ ALTER TABLE "applicazione"."corso" ADD CONSTRAINT "corso_di_laurea_nella_carrier
 ALTER TABLE "applicazione"."insegnamento" ADD CONSTRAINT "insegnamenti_corso_di_laurea" FOREIGN KEY ("insegnamento_ID") REFERENCES "applicazione"."corso" ("insegnamenti");
 
 ALTER TABLE "applicazione"."esame" ADD CONSTRAINT "esame_insegnamento" FOREIGN KEY ("insegnamento") REFERENCES "applicazione"."insegnamento" ("insegnamento_ID");
+
+ALTER TABLE "applicazione"."esame" ADD CONSTRAINT "esame_studente" FOREIGN KEY ("studente") REFERENCES "applicazione"."utente" ("utente_ID");

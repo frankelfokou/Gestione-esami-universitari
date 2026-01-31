@@ -3,7 +3,9 @@
 
 final class UtenteRepository
 {
-    public function __construct(private DatabaseWrapper $wrapper) {}
+    public function __construct(private DatabaseWrapper $wrapper)
+    {
+    }
 
 
     public function create(array $data): int
@@ -11,10 +13,10 @@ final class UtenteRepository
         $this->db->execute(
             'INSERT INTO utente (nome, cognome, email, password) VALUES (:nome, :cognome, :email, :password)',
             [
-                'nome'  => $data['nome'],
-                'cognome'  => $data['cognome'],
+                'nome' => $data['nome'],
+                'cognome' => $data['cognome'],
                 'email' => $data['email'],
-                'password'  => $data['password'],
+                'password' => $data['password'],
             ]
         );
 
@@ -34,16 +36,24 @@ final class UtenteRepository
         );
     }
 
+    public function findByEmail(string $email): ?array
+    {
+        return $this->db->fetchOne(
+            'SELECT * FROM applicazione.utente WHERE email = :email',
+            ['email' => $email]
+        );
+    }
+
     public function update(int $id, array $data): int
     {
         return $this->db->execute(
             'UPDATE applicazione.utente SET nome = :nome, cognome = :cognome, email = :email, password = :password WHERE utente_id = :id',
             [
-                'id'    => $id,
-                'nome'  => $data['nome'],
-                'cognome'  => $data['cognome'],
+                'id' => $id,
+                'nome' => $data['nome'],
+                'cognome' => $data['cognome'],
                 'email' => $data['email'],
-                'password'  => $data['password'],
+                'password' => $data['password'],
             ]
         );
     }
