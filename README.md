@@ -264,40 +264,34 @@ src/sql/
 Il seguente diagramma mostra come i miei componenti si integrano con l'architettura esistente, organizzati per layer logici:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TD
-    %% Stili dei nodi per Layer
-    classDef infra fill:#f8f9fa,stroke:#343a40,stroke-width:2px;
-    classDef presentation fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
-    classDef business fill:#d1e7dd,stroke:#198754,stroke-width:2px;
-    classDef data fill:#e2e3e5,stroke:#6c757d,stroke-width:2px;
-    classDef db fill:#212529,stroke:#ffffff,stroke-width:2px,color:#fff;
-
     %% Nodo Router
-    ROUTER("Router / Front Controller"):::infra
+    ROUTER("Router / Front Controller")
 
     %% Layer Presentazione
     subgraph PresentationLayer [Presentation Layer]
-        STATS("StatsController"):::presentation
-        LOGIN("LoginController"):::presentation
-        LOGOUT("LogoutController"):::presentation
+        STATS("StatsController")
+        LOGIN("LoginController")
+        LOGOUT("LogoutController")
     end
 
     %% Layer Logica
     subgraph BusinessLayer [Business Logic Layer]
-        AUTH("AuthMiddleware"):::business
-        STRAT("StatisticsStrategies"):::business
+        AUTH("AuthMiddleware")
+        STRAT("StatisticsStrategies")
     end
 
     %% Layer Dati
     subgraph DataLayer [Data Access Layer]
-        REPO_E("EsameRepository"):::data
-        REPO_U("UtenteRepository"):::data
+        REPO_E("EsameRepository")
+        REPO_U("UtenteRepository")
     end
 
     %% Infrastruttura
     subgraph InfrastructureLayer [Infrastruttura]
-        DB_WRAP("DatabaseWrapper"):::infra
-        DB[("PostgreSQL")]:::db
+        DB_WRAP("DatabaseWrapper")
+        DB[("PostgreSQL")]
     end
 
     %% Relazioni
@@ -537,6 +531,7 @@ class TrendMedieStrategy {
 Il seguente diagramma UML mostra la struttura completa del pattern Strategy implementato:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 classDiagram
     direction TB
 
@@ -585,6 +580,7 @@ classDiagram
 Questo diagramma descrive come il controller interagisce con le diverse strategie per ottenere i calcoli:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant S as StatsController
     participant MA as MediaAritmetica
@@ -655,6 +651,7 @@ public function findByEmail(string $email): ?array {
 Mostra l'isolamento dei dati grazie alla clausola WHERE nel repository:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Controller
     participant R as EsameRepository
@@ -727,6 +724,7 @@ function statsEP(): void {
 Descrive come il middleware protegge l'accesso alle risorse riservate:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant R as Router
     participant M as AuthMiddleware
@@ -746,17 +744,14 @@ sequenceDiagram
 Il seguente diagramma mostra la struttura logica della sessione utente:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph LR
-    %% --- DEFINIZIONE STILI ---
-    classDef stateNode fill:#eceff4,stroke:#4c566a,stroke-width:2px;
-    classDef processNode fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,stroke-dasharray: 5;
-  
     %% --- NODI ---
     START(( ))
-    GUEST("Utente Guest"):::stateNode
-    LOGIN("Verifica Credenziali"):::processNode
-    SESSION("Sessione Attiva"):::stateNode
-    STATS("Calcolo Statistiche"):::processNode
+    GUEST("Utente Guest")
+    LOGIN("Verifica Credenziali")
+    SESSION("Sessione Attiva")
+    STATS("Calcolo Statistiche")
 
     %% --- FLUSSO ---
     START --> GUEST
@@ -766,9 +761,6 @@ graph LR
     STATS -- "JSON" --> SESSION
     LOGIN -- "Errore" --> GUEST
     SESSION -- "Logout" --> GUEST
-
-    %% --- COLORI ---
-    linkStyle 2 stroke:#2e7d32,stroke-width:3px;
 ```
 
 ---
@@ -853,6 +845,7 @@ function loginEP() {
 Dettaglio dell'interazione durante la creazione della sessione:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Client
     participant L as LoginController
@@ -976,6 +969,7 @@ function statsEP(): void {
 Il seguente diagramma mostra il flusso completo di una richiesta all'endpoint `/api/stats`, includendo autenticazione, accesso al database, esecuzione delle strategie e gestione degli errori:
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Client
     participant R as Router
