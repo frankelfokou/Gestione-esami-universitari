@@ -2,8 +2,12 @@
 
 ## Progetto Gestione Esami - Ingegneria del Software
 
+---
+
 **Autore**: Fokou Frankel
+
 **Matricola**: 352559
+
 **Modulo**: Backend - Statistiche e Autenticazione/Multiutenza
 
 ---
