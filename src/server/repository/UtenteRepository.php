@@ -64,12 +64,6 @@ final class UtenteRepository
         $stmt->execute(['id' => $utenteId]);
     }
 
-    public function delete(int $utenteId): int
-    {
-        return $this->db->execute(
-            'DELETE FROM applicazione.utente WHERE utente_id = :id',
-            ['id' => $utenteId]
-        );
-    }
+
 }
 

@@ -4,6 +4,8 @@ require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
 require_once __DIR__ . '/strategies/MediaAritmetica.php';
 require_once __DIR__ . '/strategies/MediaPonderata.php';
 require_once __DIR__ . '/strategies/MediaPrevisionale.php';
+require_once __DIR__ . '/strategies/DistribuzioneVotiStrategy.php';
+require_once __DIR__ . '/strategies/TrendMedieStrategy.php';
 require_once __DIR__ . '/middleware/AuthMiddleware.php';
 require_once dirname(__DIR__) . '/repository/EsameRepository.php';
 
@@ -21,12 +23,17 @@ function statsEP(): void
         // Use repository to find exams for this student
         $esami = $esameRepo->findByStudent($userId);
 
+        $distribuzioneStrategy = new DistribuzioneVotiStrategy();
+        $trendStrategy = new TrendMedieStrategy();
+
         $mediaAritmeticaStrategy = new MediaAritmetica();
         $mediaPonderataStrategy = new MediaPonderata();
         $mediaPrevisionaleStrategy = new MediaPrevisionale();
 
         $mediaA = $mediaAritmeticaStrategy->calcola($esami);
         $mediaP = $mediaPonderataStrategy->calcola($esami);
+        $distribuzione = $distribuzioneStrategy->calcola($esami);
+        $trend = $trendStrategy->calcola($esami);
 
         $totCFU = 0;
         foreach ($esami as $e) {
@@ -41,12 +48,14 @@ function statsEP(): void
         $cfuTotaliCorso = 180;
         $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
 
-        echo json_encode(value: [
+        echo json_encode([
             'mediaA' => $mediaA,
             'mediaP' => $mediaP,
             'proiezione' => $proiezione,
             'cfuTotali' => $totCFU,
-            'previsione110' => $mediaFutura
+            'previsione110' => $mediaFutura,
+            'distribuzioneVoti' => $distribuzione,
+            'trendMedia' => $trend
         ]);
 
     } catch (Exception $e) {

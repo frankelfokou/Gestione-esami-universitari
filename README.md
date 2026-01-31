@@ -13,7 +13,9 @@ Il modulo statistiche non si limita a riportare dati storici, ma offre strumenti
 1. **Media Aritmetica**: Calcolo standard `(Somma Voti / N. Esami)`.
 2. **Media Ponderata**: Calcolo pesato `(Somma (Voto*CFU) / Tot CFU)`. Essenziale per il voto di laurea.
 3. **Proiezione Voto di Laurea**: Stima del voto di partenza basata sulla media ponderata attuale `(Media Ponderata * 110) / 30`.
-4. **Forecasting Strategico (NEW)**: Risponde alla domanda *"Che media devo mantenere nei prossimi esami per laurearmi con 110?"*. Calcola il target medio richiesto sui CFU residui.
+4. **Forecasting Strategico**: Risponde alla domanda *"Che media devo mantenere nei prossimi esami per laurearmi con 110?"*. Calcola il target medio richiesto sui CFU residui.
+5. **Distribuzione Voti (NEW)**: Analizza la frequenza dei voti per fasce (18-21, 22-24, 25-27, 28-29, 30, 30L). Fornisce una vista statistica sulla costanza del rendimento.
+6. **Trend Temporale (NEW)**: Calcola l'evoluzione della media ponderata nel tempo, mostrando la progressione del rendimento esame dopo esame.
 
 ### 1.2 Sicurezza & Multi-tenancy (`/auth`)
 
@@ -56,6 +58,8 @@ class AuthMiddleware {
 * `MediaAritmetica`: `calcola($esami)`
 * `MediaPonderata`: `calcola($esami)`
 * `MediaPrevisionale`: `calcola($mediaCorrente, $cfuFatti, ...)`
+* `DistribuzioneVotiStrategy`: `calcola($esami)` - Restituisce un array associativo con la frequenza per fascia di voto
+* `TrendMedieStrategy`: `calcola($esami)` - Restituisce un array temporale con la media progressiva
 
 **Vantaggio**: Rispetto dell'Open/Closed Principle. Possiamo aggiungere strategie senza modificare il codice esistente.
 
@@ -129,15 +133,17 @@ REFERENCES "applicazione"."utente" ("utente_ID");
 
 ## 5. Riepilogo Componenti
 
-| Modulo              | Componente                     | Descrizione                                |
-| :------------------ | :----------------------------- | :----------------------------------------- |
-| **Sicurezza** | `AuthMiddleware`             | Interceptor per protezione endpoint.       |
-| **Sicurezza** | `login.php` / `logout.php` | Gestione ciclo di vita sessione.           |
-| **Sicurezza** | `UtenteRepository`           | Accesso dati anagrafici e credenziali.     |
-| **Stats**     | `stats.php`                  | Controller principale (Orchestrator).      |
-| **Stats**     | `MediaStrategy` Interface    | Contratto per gli algoritmi.               |
-| **Stats**     | `MediaPrevisionale` etc.     | Implementazioni concrete degli algoritmi.  |
-| **Data**      | `EsameRepository`            | Accesso dati esami (con filtro sicurezza). |
+| Modulo              | Componente                                      | Descrizione                                |
+| :------------------ | :---------------------------------------------- | :----------------------------------------- |
+| **Sicurezza**       | `AuthMiddleware`                                | Interceptor per protezione endpoint.       |
+| **Sicurezza**       | `login.php` / `logout.php`                      | Gestione ciclo di vita sessione.           |
+| **Sicurezza**       | `UtenteRepository`                              | Accesso dati anagrafici e credenziali.     |
+| **Stats**           | `stats.php`                                     | Controller principale (Orchestrator).      |
+| **Stats**           | `MediaStrategy` Interface                       | Contratto per gli algoritmi.               |
+| **Stats**           | `MediaAritmetica`, `MediaPonderata`             | Calcolo medie base.                        |
+| **Stats**           | `MediaPrevisionale`                             | Forecasting voto di laurea.                |
+| **Stats**           | `DistribuzioneVotiStrategy`, `TrendMedieStrategy` | Analisi avanzate (distribuzione e trend).  |
+| **Data**            | `EsameRepository`                               | Accesso dati esami (con filtro sicurezza). |
 
 ---
 
@@ -167,6 +173,14 @@ classDiagram
         calcola(media, cfu, target) float
     }
 
+    class DistribuzioneVotiStrategy {
+        calcola(esami) array
+    }
+
+    class TrendMedieStrategy {
+        calcola(esami) array
+    }
+
     class StatsController {
         statsEP()
     }
@@ -175,6 +189,8 @@ classDiagram
     MediaStrategy <|.. MediaPonderata
     MediaStrategy <|.. MediaPrevisionale
     StatsController ..> MediaStrategy
+    StatsController ..> DistribuzioneVotiStrategy
+    StatsController ..> TrendMedieStrategy
 ```
 
 ### 6.2 Diagramma di Sequenza (Flusso Auth & Statistiche)

@@ -46,7 +46,30 @@ assertEqual(26.86, $resP, "Media Ponderata should be ~26.86");
 // AvgFuture = (5400 - 564.06) / 159 = 4835.94 / 159 = 30.41
 $stratPrev = new MediaPrevisionale();
 $resPrev = $stratPrev->calcola(26.86, 21, 180, 110);
-// Note: It's > 30, so effectively "impossible" but mathematically correct
 assertEqual(30.41, $resPrev, "Forecast for 110 should be ~30.41");
+
+// --- Test Distribuzione Voti ---
+// 30, 24, 28
+require_once dirname(dirname(__DIR__)) . '/api/strategies/DistribuzioneVotiStrategy.php';
+$stratDist = new DistribuzioneVotiStrategy();
+$resDist = $stratDist->calcola($esami);
+assertEqual(1, $resDist['28-29'], "Should have 1 exam in 28-29 range");
+assertEqual(1, $resDist['22-24'], "Should have 1 exam in 22-24 range");
+assertEqual(1, $resDist['30'], "Should have 1 exam with 30");
+
+// --- Test Trend ---
+// Data needs to be added to mock
+$esamiTrend = [
+    ['voto' => 24, 'cfu' => 6, 'data' => '2023-01-01', 'nome' => 'A'],
+    ['voto' => 28, 'cfu' => 6, 'data' => '2023-06-01', 'nome' => 'B']
+];
+// 1st point: 24 (avg 24)
+// 2nd point: (24*6 + 28*6)/12 = 52/2 = 26
+require_once dirname(dirname(__DIR__)) . '/api/strategies/TrendMedieStrategy.php';
+$stratTrend = new TrendMedieStrategy();
+$resTrend = $stratTrend->calcola($esamiTrend);
+
+assertEqual(24.0, $resTrend[0]['media_progressiva'], "First trend point avg should be 24");
+assertEqual(26.0, $resTrend[1]['media_progressiva'], "Second trend point avg should be 26");
 
 echo "\nTests Completed.\n";
