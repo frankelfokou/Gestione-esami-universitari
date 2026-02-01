@@ -1248,7 +1248,7 @@ No syntax errors detected in src/server/repository/UtenteRepository.php
 
 **File Modificati**:
 
-- `src/sql/init.sql` (aggiunta colonna `studente` con FK)
+- `src/sql/init.sql` (aggiunta colonna `studente`)
 - `src/server/api/endpoints.txt` (registrazione endpoint)
 - `src/server/EsameRepository.php`  (Esteso con filtro per studente)
 - `src/server/UtenteRepository.php`  (Esteso con ricerca per email)
