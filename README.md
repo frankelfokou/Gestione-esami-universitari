@@ -1,6 +1,6 @@
 # Documentazione Tecnica: Modulo Statistiche e Sicurezza
 
-## Progetto Gestione Esami
+## Progetto: Gestione Esami
 
 ---
 
