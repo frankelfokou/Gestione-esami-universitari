@@ -381,7 +381,7 @@ sequenceDiagram
     participant PREV as MediaPrevisionale
   
     Note over S: Caricamento strategie
-    rect rgb(240, 240, 240)
+    rect rgba(128, 128, 128, 0.13)
     Note over S: getStatsData(userId)
     S->>MA: calcola(esami)
     MA-->>S: mediaA
@@ -988,7 +988,7 @@ sequenceDiagram
   
     alt Session Valid
         M-->>S: userId
-        rect rgb(240, 240, 240)
+        rect rgba(128, 128, 128, 0.13)
         Note over S: getStatsData(userId)
         S->>Repo: findByStudent(userId)
         Repo->>DB: SELECT * FROM esame WHERE studente = :id
@@ -1418,7 +1418,7 @@ sequenceDiagram
   
     alt Session Valid
         M-->>S: userId
-        rect rgb(240, 240, 240)
+        rect rgba(128, 128, 128, 0.13)
         Note over S: getStatsData(userId)
         S->>Repo: findByStudent(userId)
         Repo->>DB: SELECT * FROM esame WHERE studente = :id
@@ -1513,7 +1513,7 @@ sequenceDiagram
     participant PREV as MediaPrevisionale
   
     Note over S: Caricamento strategie
-    rect rgb(240, 240, 240)
+    rect rgba(128, 128, 128, 0.13)
     Note over S: getStatsData(userId)
     S->>MA: calcola(esami)
     MA-->>S: mediaA
