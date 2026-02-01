@@ -1,16 +1,32 @@
 <?php
-final class EsameRepository {
-  public function __construct(private DB $pdo) {}
+require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
 
-  public function all(): array {
-    return $this->pdo->fetchAll("SELECT id, nome, data_esame FROM esame ORDER BY id DESC");
+final class EsameRepository
+{
+  public function __construct(private DatabaseWrapper $db)
+  {
   }
 
-  public function create(string $nome, string $data_esame): int {
-    $sql = "INSERT INTO esame (nome, data_esame) VALUES (:nome, :data) RETURNING id";
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute(['nome' => $nome, 'data' => $data_esame]);
-    // return (int)$stmt->fetchColumn();
-    return $thi;
+  public function all(): array
+  {
+    return $this->db->fetchAll("SELECT * FROM applicazione.esame ORDER BY esame_ID DESC");
+  }
+
+  /**
+   * Trova gli esami tramite l'ID dello studente.
+   * Metodo aggiunto per supportare la multi-utenza.
+   */
+  public function findByStudent(int $studenteId): array
+  {
+    return $this->db->fetchAll(
+      "SELECT * FROM applicazione.esame WHERE studente = :id ORDER BY esame_ID DESC",
+      ['id' => $studenteId]
+    );
+  }
+
+  public function create(array $data): int
+  {
+    // Implementation pending
+    return 0;
   }
 }

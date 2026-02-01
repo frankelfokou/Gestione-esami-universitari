@@ -27,10 +27,10 @@ export class ExamModel {
         return new Promise((resolve) => {
             // Assegna un ID finto progressivo
             const newId = this.esami.length > 0 ? Math.max(...this.esami.map(e => e.id)) + 1 : 1;
-            
+
             const nuovoEsameConId = { ...esame, id: newId };
             this.esami.push(nuovoEsameConId);
-            
+
             console.log("💾 [MOCK DB] Esame salvato:", nuovoEsameConId);
             resolve({ success: true, id: newId });
         });
@@ -50,26 +50,16 @@ export class ExamModel {
     /**
      * Calcola le statistiche (Business Logic)
      */
-    getStats() {
-        if (this.esami.length === 0) {
+    async getStats() {
+        try {
+            const response = await fetch('/api/stats');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching stats:', error);
             return { mediaA: 0, mediaP: 0, proiezione: 0, cfuTotali: 0 };
         }
-
-        const sommaVoti = this.esami.reduce((acc, e) => acc + e.voto, 0);
-        const sommaPonderata = this.esami.reduce((acc, e) => acc + (e.voto * e.cfu), 0);
-        const totCFU = this.esami.reduce((acc, e) => acc + e.cfu, 0);
-
-        const mediaA = sommaVoti / this.esami.length;
-        const mediaP = totCFU > 0 ? sommaPonderata / totCFU : 0;
-        
-        // Proiezione voto di laurea: (Media Ponderata * 110) / 30
-        const proiezione = (mediaP * 110) / 30;
-
-        return {
-            mediaA,
-            mediaP,
-            proiezione,
-            cfuTotali: totCFU
-        };
     }
 }
