@@ -12,7 +12,7 @@
 - Statistiche esami: Fokou Frankel
 
 🧰**Tecnologie usate**:
-- Docker
+- Docker 
 - Postgres
 - Javascript, HTML e CSS per il frontend
 - PHP, nginx per il backend
@@ -31,5 +31,8 @@
 - [ ] Frontend
     - [x] Sviluppo
         - [x] MVP
+        - [] Delete button
+        - [] Plot grafici statistiche
 
 - [ ] Backend
+ 
