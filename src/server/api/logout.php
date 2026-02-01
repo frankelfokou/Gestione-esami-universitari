@@ -9,10 +9,10 @@ function logoutEP()
         session_start();
     }
 
-    // Unset all session values
+    // Svuota tutti i valori della sessione
     $_SESSION = array();
 
-    // Destroy the session cookie
+    // Distruggi il cookie di sessione
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
         setcookie(
@@ -26,8 +26,8 @@ function logoutEP()
         );
     }
 
-    // Destroy the session
+    // Distruggi la sessione
     session_destroy();
 
-    echo json_encode(['message' => 'Logout successful']);
+    echo json_encode(['message' => 'Logout effettuato con successo']);
 }

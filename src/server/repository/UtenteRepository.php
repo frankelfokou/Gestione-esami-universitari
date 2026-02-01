@@ -3,7 +3,7 @@
 
 final class UtenteRepository
 {
-    public function __construct(private DatabaseWrapper $wrapper)
+    public function __construct(private DatabaseWrapper $db)
     {
     }
 
@@ -25,7 +25,7 @@ final class UtenteRepository
 
     public function findAll(): array
     {
-        return $this->wrapper->fetchAll("SELECT * FROM applicazione.utente ORDER BY utente_id");
+        return $this->db->fetchAll("SELECT * FROM applicazione.utente ORDER BY utente_id");
     }
 
     public function findById(int $utenteId): ?array
@@ -36,6 +36,10 @@ final class UtenteRepository
         );
     }
 
+    /**
+     * Trova un utente tramite la sua email.
+     * Metodo aggiunto per supportare il processo di login.
+     */
     public function findByEmail(string $email): ?array
     {
         return $this->db->fetchOne(
@@ -60,7 +64,7 @@ final class UtenteRepository
 
     public function delete(int $utenteId): void
     {
-        $stmt = $this->wrapper->prepare("DELETE FROM applicazione.utente WHERE utente_id = :id");
+        $stmt = $this->db->prepare("DELETE FROM applicazione.utente WHERE utente_id = :id");
         $stmt->execute(['id' => $utenteId]);
     }
 

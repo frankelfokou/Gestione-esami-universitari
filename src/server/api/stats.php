@@ -13,14 +13,14 @@ function statsEP(): void
 {
     header(header: 'Content-Type: application/json');
 
-    // Authentication via Middleware
+    // Autenticazione tramite Middleware
     $userId = AuthMiddleware::isAuthenticated();
 
     try {
         $db = new DatabaseWrapper((new DatabasePDO())->pdo());
         $esameRepo = new EsameRepository($db);
 
-        // Use repository to find exams for this student
+        // Uso del repository per trovare gli esami di questo studente
         $esami = $esameRepo->findByStudent($userId);
 
         $distribuzioneStrategy = new DistribuzioneVotiStrategy();
@@ -43,8 +43,8 @@ function statsEP(): void
         // Proiezione voto di laurea: (Media Ponderata * 110) / 30
         $proiezione = ($mediaP * 110) / 30;
 
-        // Forecast: Goal 110L (or just 110)
-        // Assuming Bachelor degree (180 CFU total)
+        // Previsione: Obiettivo 110
+        // Assumendo una laurea triennale (180 CFU totali)
         $cfuTotaliCorso = 180;
         $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
 
@@ -60,6 +60,6 @@ function statsEP(): void
 
     } catch (Exception $e) {
         http_response_code(response_code: 500);
-        echo json_encode(value: ['error' => $e->getMessage()]);
+        echo json_encode(value: ['error' => 'Errore del server: ' . $e->getMessage()]);
     }
 }

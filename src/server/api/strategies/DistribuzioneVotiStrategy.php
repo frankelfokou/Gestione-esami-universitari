@@ -5,11 +5,11 @@ class DistribuzioneVotiStrategy
 {
 
     /**
-     * Calculates the frequency distribution of grades.
-     * Buckets: 18-21, 22-24, 25-27, 28-29, 30, 30L
+     * Calcola la distribuzione di frequenza dei voti.
+     * Fasce: 18-21, 22-24, 25-27, 28-29, 30, 30L
      * 
-     * @param array $esami Array of exams.
-     * @return array Distribution dictionary.
+     * @param array $esami Array di esami.
+     * @return array Dizionario della distribuzione.
      */
     public function calcola(array $esami): array
     {

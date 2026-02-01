@@ -1,6 +1,6 @@
 # Documentazione Tecnica: Modulo Statistiche e Sicurezza
 
-## Progetto Gestione Esami - Ingegneria del Software
+## Progetto Gestione Esami
 
 ---
 
@@ -264,7 +264,6 @@ src/sql/
 Il seguente diagramma mostra come i miei componenti si integrano con l'architettura esistente, organizzati per layer logici:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 graph TD
     %% Nodo Router
     ROUTER("Router / Front Controller")
@@ -531,7 +530,6 @@ class TrendMedieStrategy {
 Il seguente diagramma UML mostra la struttura completa del pattern Strategy implementato:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 classDiagram
     direction TB
 
@@ -580,7 +578,6 @@ classDiagram
 Questo diagramma descrive come il controller interagisce con le diverse strategie per ottenere i calcoli:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant S as StatsController
     participant MA as MediaAritmetica
@@ -651,7 +648,6 @@ public function findByEmail(string $email): ?array {
 Mostra l'isolamento dei dati grazie alla clausola WHERE nel repository:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Controller
     participant R as EsameRepository
@@ -688,7 +684,7 @@ class AuthMiddleware {
   
         if (!isset($_SESSION['user_id'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Unauthorized']);
+            echo json_encode(['error' => 'Non autorizzato']);
             exit; // Blocca l'esecuzione
         }
   
@@ -724,7 +720,6 @@ function statsEP(): void {
 Descrive come il middleware protegge l'accesso alle risorse riservate:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant R as Router
     participant M as AuthMiddleware
@@ -744,7 +739,6 @@ sequenceDiagram
 Il seguente diagramma mostra la struttura logica della sessione utente:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 graph LR
     %% --- NODI ---
     START(( ))
@@ -808,7 +802,7 @@ function loginEP() {
   
         if (!$utente || !password_verify($password, $utente['password_hash'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Invalid credentials']);
+            echo json_encode(['error' => 'Credenziali non valide']);
             return;
         }
 
@@ -828,7 +822,7 @@ function loginEP() {
         ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Server error']);
+        echo json_encode(['error' => 'Errore del server']);
     }
 }
 ```
@@ -845,7 +839,6 @@ function loginEP() {
 Dettaglio dell'interazione durante la creazione della sessione:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Client
     participant L as LoginController
@@ -969,7 +962,6 @@ function statsEP(): void {
 Il seguente diagramma mostra il flusso completo di una richiesta all'endpoint `/api/stats`, includendo autenticazione, accesso al database, esecuzione delle strategie e gestione degli errori:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant C as Client
     participant R as Router
@@ -1148,13 +1140,13 @@ require_once dirname(dirname(__DIR__)) . '/api/strategies/TrendMedieStrategy.php
 
 function assertEqual($expected, $actual, $message) {
     if (abs($expected - $actual) < 0.01) {
-        echo "✓ PASS: $message\n";
+        echo "PASS: $message\n";
     } else {
-        echo "✗ FAIL: $message (Expected: $expected, Got: $actual)\n";
+        echo "FAIL: $message (Atteso: $expected, Ottenuto: $actual)\n";
     }
 }
 
-echo "Running Strategy Unit Tests...\n\n";
+echo "Esecuzione Unit Test delle Strategie...\n\n";
 
 // Setup Data
 $esami = [
@@ -1166,60 +1158,55 @@ $esami = [
 // Test Media Aritmetica: (30+24+28)/3 = 27.33
 $stratA = new MediaAritmetica();
 $resA = $stratA->calcola($esami);
-assertEqual(27.33, $resA, "Media Aritmetica should be ~27.33");
+assertEqual(27.33, $resA, "La Media Aritmetica dovrebbe essere ~27.33");
 
 // Test Media Ponderata: (30*6 + 24*9 + 28*6) / (6+9+6) = 564/21 = 26.86
 $stratP = new MediaPonderata();
 $resP = $stratP->calcola($esami);
-assertEqual(26.86, $resP, "Media Ponderata should be ~26.86");
+assertEqual(26.86, $resP, "La Media Ponderata dovrebbe essere ~26.86");
 
 // Test Media Previsionale
-// Media attuale: 26.86, CFU fatti: 21, Target: 110
-// TargetMedia = (110*30)/110 = 30
-// MediaFutura = (30*180 - 26.86*21) / (180-21) = (5400-564.06)/159 = 30.41
 $stratPrev = new MediaPrevisionale();
 $resPrev = $stratPrev->calcola(26.86, 21, 180, 110);
-assertEqual(30.41, $resPrev, "Forecast for 110 should be ~30.41");
+assertEqual(30.41, $resPrev, "La previsione per il 110 dovrebbe essere ~30.41");
 
 // Test Distribuzione Voti
 $stratDist = new DistribuzioneVotiStrategy();
 $resDist = $stratDist->calcola($esami);
-assertEqual(1, $resDist['28-29'], "Should have 1 exam in 28-29 range");
-assertEqual(1, $resDist['22-24'], "Should have 1 exam in 22-24 range");
-assertEqual(1, $resDist['30'], "Should have 1 exam with 30");
+assertEqual(1, $resDist['28-29'], "Dovrebbe esserci 1 esame nella fascia 28-29");
+assertEqual(1, $resDist['22-24'], "Dovrebbe esserci 1 esame nella fascia 22-24");
+assertEqual(1, $resDist['30'], "Dovrebbe esserci 1 esame con voto 30");
 
 // Test Trend
 $esamiTrend = [
     ['voto' => 24, 'cfu' => 6, 'data' => '2023-01-01', 'nome' => 'A'],
     ['voto' => 28, 'cfu' => 6, 'data' => '2023-06-01', 'nome' => 'B']
 ];
-// 1st point: 24*6/6 = 24
-// 2nd point: (24*6 + 28*6)/12 = 312/12 = 26
 $stratTrend = new TrendMedieStrategy();
 $resTrend = $stratTrend->calcola($esamiTrend);
 
-assertEqual(24.0, $resTrend[0]['media_progressiva'], "First trend point avg should be 24");
-assertEqual(26.0, $resTrend[1]['media_progressiva'], "Second trend point avg should be 26");
+assertEqual(24.0, $resTrend[0]['media_progressiva'], "La media del primo punto del trend dovrebbe essere 24");
+assertEqual(26.0, $resTrend[1]['media_progressiva'], "La media del secondo punto del trend dovrebbe essere 26");
 
-echo "\nTests Completed.\n";
+echo "\nTest Completati.\n";
 ```
 
 ### 8.2 Esecuzione Test
 
 ```bash
 $ php src/server/test/unit/StrategiesTest.php
-Running Strategy Unit Tests...
+Esecuzione Unit Test delle Strategie...
 
-✓ PASS: Media Aritmetica should be ~27.33
-✓ PASS: Media Ponderata should be ~26.86
-✓ PASS: Forecast for 110 should be ~30.41
-✓ PASS: Should have 1 exam in 28-29 range
-✓ PASS: Should have 1 exam in 22-24 range
-✓ PASS: Should have 1 exam with 30
-✓ PASS: First trend point avg should be 24
-✓ PASS: Second trend point avg should be 26
+PASS: La Media Aritmetica dovrebbe essere ~27.33
+PASS: La Media Ponderata dovrebbe essere ~26.86
+PASS: La previsione per il 110 dovrebbe essere ~30.41
+PASS: Dovrebbe esserci 1 esame nella fascia 28-29
+PASS: Dovrebbe esserci 1 esame nella fascia 22-24
+PASS: Dovrebbe esserci 1 esame con voto 30
+PASS: La media del primo punto del trend dovrebbe essere 24
+PASS: La media del secondo punto del trend dovrebbe essere 26
 
-Tests Completed.
+Test Completati.
 ```
 
 **Tutti i test passano**, confermando la correttezza degli algoritmi.
@@ -1264,14 +1251,14 @@ No syntax errors detected in src/server/repository/UtenteRepository.php
 - `src/server/api/strategies/MediaPrevisionale.php`
 - `src/server/api/strategies/DistribuzioneVotiStrategy.php`
 - `src/server/api/strategies/TrendMedieStrategy.php`
-- `src/server/repository/EsameRepository.php`
-- `src/server/repository/UtenteRepository.php`
 - `src/server/test/unit/StrategiesTest.php`
 
 **File Modificati**:
 
 - `src/sql/init.sql` (aggiunta colonna `studente` con FK)
 - `src/server/api/endpoints.txt` (registrazione endpoint)
+- `src/server/EsameRepository.php`  (Esteso con filtro per studente)
+- `src/server/UtenteRepository.php`  (Esteso con ricerca per email)
 
 **Design Pattern Applicati**:
 

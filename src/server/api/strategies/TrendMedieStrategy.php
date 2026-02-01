@@ -5,15 +5,15 @@ class TrendMedieStrategy
 {
 
     /**
-     * Calculates the evolution of the weighted average over time.
-     * Assumes $esami is ordered by date or has a date field.
+     * Calcola l'evoluzione della media ponderata nel tempo.
+     * Assume che $esami sia ordinato per data o abbia un campo data.
      * 
-     * @param array $esami Array of exams.
-     * @return array Array of points ['data' => date, 'media' => float]
+     * @param array $esami Array di esami.
+     * @return array Array di punti ['data' => data, 'media' => float]
      */
     public function calcola(array $esami): array
     {
-        // Sort exams by date just in case
+        // Ordina gli esami per data
         usort($esami, function ($a, $b) {
             return strcmp($a['data'], $b['data']);
         });
@@ -26,8 +26,7 @@ class TrendMedieStrategy
             $voto = $esame['voto'];
             $cfu = $esame['cfu'];
 
-            // Skip "approved" exams without grade if any (usually represented as 0 or null in some systems)
-            // Assuming simplified model where voto is always valid number for calculation
+            // Salta gli esami approvati senza voto se presenti
             if ($voto < 18)
                 continue;
 
@@ -38,7 +37,7 @@ class TrendMedieStrategy
 
             $trend[] = [
                 'data' => $esame['data'],
-                'esame' => $esame['nome'], // Adding exam name for context
+                'esame' => $esame['nome'], // Aggiunta nome esame per contesto
                 'media_progressiva' => round($mediaCorrente, 2)
             ];
         }

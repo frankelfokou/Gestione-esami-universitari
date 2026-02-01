@@ -4,10 +4,10 @@
 class AuthMiddleware
 {
     /**
-     * Verifies if the user is authenticated.
-     * Starts the session if not already started.
+     * Verifica se l'utente è autenticato.
+     * Avvia la sessione se non è già stata avviata.
      * 
-     * @return int The authenticated user ID.
+     * @return int L'ID dell'utente autenticato.
      */
     public static function isAuthenticated(): int
     {
@@ -17,7 +17,7 @@ class AuthMiddleware
 
         if (!isset($_SESSION['user_id'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Unauthorized']);
+            echo json_encode(['error' => 'Non autorizzato']);
             exit;
         }
 

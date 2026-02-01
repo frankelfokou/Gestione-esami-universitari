@@ -5,13 +5,13 @@ class MediaPrevisionale
 {
 
     /**
-     * Calculates the average grade required in future exams to achieve a target graduation grade.
+     * Calcola la media dei voti necessaria negli esami futuri per raggiungere un voto di laurea target.
      * 
-     * @param float $mediaPonderataCurrent Current weighted average.
-     * @param int $cfuAcquisiti Total CFU acquired so far.
-     * @param int $cfuTotali Total CFU required for graduation (e.g., 180 for Bachelor).
-     * @param int $targetVotoLaurea Target graduation grade (e.g., 110).
-     * @return float Required average for remaining exams. Returns -1 if impossible (e.g., required > 30).
+     * @param float $mediaPonderataCurrent Media ponderata attuale.
+     * @param int $cfuAcquisiti Totale CFU acquisiti finora.
+     * @param int $cfuTotali Totale CFU richiesti per la laurea (es. 180 per la Triennale).
+     * @param int $targetVotoLaurea Voto di laurea obiettivo (es. 110).
+     * @return float Media necessaria per i restanti esami.
      */
     public function calcola(float $mediaPonderataCurrent, int $cfuAcquisiti, int $cfuTotali = 180, int $targetVotoLaurea = 110): float
     {
@@ -23,11 +23,10 @@ class MediaPrevisionale
         $cfuMancanti = $cfuTotali - $cfuAcquisiti;
 
         if ($cfuMancanti <= 0) {
-            return 0; // Course completed
+            return 0; // Corso completato
         }
 
-        // Formula: MediaFinale = ((MediaCorrente * CfuFatti) + (MediaFutura * CfuMancanti)) / CfuTotali
-        // MediaFutura = ((MediaFinale * CfuTotali) - (MediaCorrente * CfuFatti)) / CfuMancanti
+        // Formula: MediaFutura = ((MediaFinale * CfuTotali) - (MediaCorrente * CfuFatti)) / CfuMancanti
 
         $sommaPonderataAttuale = $mediaPonderataCurrent * $cfuAcquisiti;
         $sommaPonderataTarget = $targetMediaFinale * $cfuTotali;

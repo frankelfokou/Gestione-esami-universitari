@@ -12,8 +12,9 @@ final class EsameRepository
     return $this->db->fetchAll("SELECT * FROM applicazione.esame ORDER BY esame_ID DESC");
   }
 
-  /*
-   * Finds exams by student ID.
+  /**
+   * Trova gli esami tramite l'ID dello studente.
+   * Metodo aggiunto per supportare la multi-utenza.
    */
   public function findByStudent(int $studenteId): array
   {
