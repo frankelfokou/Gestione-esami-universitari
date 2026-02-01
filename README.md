@@ -50,9 +50,10 @@ Questo documento costituisce il riferimento tecnico completo per le implementazi
    - 8.1 [Unit Testing](#81-unit-testing)
    - 8.2 [Esecuzione Test](#82-esecuzione-test)
    - 8.3 [Verifica Sintattica](#83-verifica-sintattica)
-9. [Conclusioni](#conclusioni)
-   - [Tecnologie Utilizzate](#tecnologie-utilizzate)
-   - [Riepilogo Contributi](#riepilogo-contributi)
+9. [Conclusioni](#9-conclusioni)
+   - 9.1 [Tecnologie Utilizzate](#91-tecnologie-utilizzate)
+   - 9.2 [Riepilogo Contributi](#92-riepilogo-contributi)
+   - 9.3 [Riepilogo Diagrammi UML](#93-riepilogo-diagrammi-uml)
 
 ---
 
@@ -69,7 +70,7 @@ Il sistema "Gestione Esami" è un'applicazione web per il tracciamento della car
 
 ### 1.2 Ambito di Responsabilità
 
-Il mio contributo al progetto si concentra su **due moduli backend critici**:
+Il mio contributo al progetto si concentra su **due moduli backend**:
 
 1. **Modulo Statistiche**: Sistema di calcolo e analisi delle performance accademiche
 2. **Modulo Sicurezza**: Implementazione di autenticazione e multi-tenancy
@@ -171,8 +172,7 @@ Ho seguito un approccio **iterativo e incrementale**:
 
 ### 3.2 Lavoro in Team
 
-- **Git Flow**: Branch `feature/statistics` e `feature/auth` separati
-- **Comunicazione**: Coordinamento settimanale con il team per integrazioni
+- **Git Flow**: Branch separati per lo sviluppo indipendente delle features
 - **Integrazione**: Utilizzo dei componenti comuni (Router, DatabaseWrapper) sviluppati da altri membri
 
 ---
@@ -189,7 +189,7 @@ Il backend del progetto segue un'architettura a 3 layer:
 ├─────────────────────────────────────┤
 │   Business Logic Layer              │  ← Strategies, Middleware (MIO LAVORO)
 ├─────────────────────────────────────┤
-│   Data Access Layer                 │  ← Repositories (MIO LAVORO), DatabaseWrapper
+│   Data Access Layer                 │  ← Repositories (MODIFICATO), DatabaseWrapper
 └─────────────────────────────────────┘
 ```
 
@@ -258,15 +258,16 @@ src/sql/
 
 - Ho utilizzato i metodi `fetchAll()`, `fetchOne()`, `execute()` nei miei Repository
 - Non ho modificato il wrapper, solo utilizzato
+- Ho esteso `EsameRepository.php` e `UtenteRepository.php` con funzioni necessarie per garantire la segregazione dei dati
 
-#### Diagramma dei Componenti (Architettura Moduli)
+#### Diagramma di Componenti - Architettura dei Componenti
 
 Il seguente diagramma mostra come i miei componenti si integrano con l'architettura esistente, organizzati per layer logici:
 
 ```mermaid
 graph TD
     %% Nodo Router
-    ROUTER("Router / Front Controller")
+    ROUTER("Router")
 
     %% Layer Presentazione
     subgraph PresentationLayer [Presentation Layer]
@@ -318,6 +319,79 @@ graph TD
 **Problema**: La logica di calcolo varia (aritmetica, ponderata, previsionale, distribuzione, trend). Inserirla tutta nel controller violerebbe il Single Responsibility Principle e renderebbe il codice difficile da testare e estendere.
 
 **Soluzione**: Incapsulare ogni algoritmo in una classe dedicata.
+
+#### Diagramma di Classi - Struttura Strategy Pattern
+
+Il seguente diagramma UML mostra la struttura completa del pattern Strategy implementato:
+
+```mermaid
+classDiagram
+    direction TB
+
+    class StatsController {
+        +statsEP()
+        +getStatsData(userId) array
+    }
+
+    class MediaStrategy {
+        <<interface>>
+        +calcola(esami) float
+    }
+
+    class MediaAritmetica {
+        +calcola(esami) float
+    }
+
+    class MediaPonderata {
+        +calcola(esami) float
+    }
+
+    class MediaPrevisionale {
+        +calcola(media, cfu, target) float
+    }
+
+    class DistribuzioneVotiStrategy {
+        +calcola(esami) array
+    }
+
+    class TrendMedieStrategy {
+        +calcola(esami) array
+    }
+
+    %% L'ordine di queste tre righe determina la posizione orizzontale (Sinistra -> Destra)
+    StatsController --> MediaStrategy
+    StatsController --> DistribuzioneVotiStrategy
+    StatsController --> TrendMedieStrategy
+
+    %% Implementazioni dell'interfaccia (stanno sotto MediaStrategy)
+    MediaStrategy <|.. MediaAritmetica
+    MediaStrategy <|.. MediaPonderata
+    MediaStrategy <|.. MediaPrevisionale
+```
+
+#### Diagramma di Sequenza - Esecuzione Strategie Statistiche
+
+Questo diagramma descrive come il controller interagisce con le diverse strategie per ottenere i calcoli:
+
+```mermaid
+sequenceDiagram
+    participant S as StatsController
+    participant MA as MediaAritmetica
+    participant MP as MediaPonderata
+    participant PREV as MediaPrevisionale
+  
+    Note over S: Caricamento strategie
+    rect rgb(240, 240, 240)
+    Note over S: getStatsData(userId)
+    S->>MA: calcola(esami)
+    MA-->>S: mediaA
+    S->>MP: calcola(esami)
+    MP-->>S: mediaP
+    S->>PREV: calcola(mediaP, cfu, target)
+    PREV-->>S: mediaFutura
+    end
+    Note over S: Consolidamento risultati
+```
 
 #### Implementazione
 
@@ -525,80 +599,27 @@ class TrendMedieStrategy {
 2. **Single Responsibility**: Ogni classe ha una sola ragione per cambiare
 3. **Testabilità**: Posso testare ogni strategia indipendentemente
 
-#### Diagramma delle Classi (Strategy Pattern)
-
-Il seguente diagramma UML mostra la struttura completa del pattern Strategy implementato:
-
-```mermaid
-classDiagram
-    direction TB
-
-    class StatsController {
-        +statsEP()
-    }
-
-    class MediaStrategy {
-        <<interface>>
-        +calcola(esami) float
-    }
-
-    class MediaAritmetica {
-        +calcola(esami) float
-    }
-
-    class MediaPonderata {
-        +calcola(esami) float
-    }
-
-    class MediaPrevisionale {
-        +calcola(media, cfu, target) float
-    }
-
-    class DistribuzioneVotiStrategy {
-        +calcola(esami) array
-    }
-
-    class TrendMedieStrategy {
-        +calcola(esami) array
-    }
-
-    %% L'ordine di queste tre righe determina la posizione orizzontale (Sinistra -> Destra)
-    StatsController --> MediaStrategy
-    StatsController --> DistribuzioneVotiStrategy
-    StatsController --> TrendMedieStrategy
-
-    %% Implementazioni dell'interfaccia (stanno sotto MediaStrategy)
-    MediaStrategy <|.. MediaAritmetica
-    MediaStrategy <|.. MediaPonderata
-    MediaStrategy <|.. MediaPrevisionale
-```
-
-#### Diagramma di Sequenza: Esecuzione Strategie
-
-Questo diagramma descrive come il controller interagisce con le diverse strategie per ottenere i calcoli:
-
-```mermaid
-sequenceDiagram
-    participant S as StatsController
-    participant MA as MediaAritmetica
-    participant MP as MediaPonderata
-    participant PREV as MediaPrevisionale
-  
-    Note over S: Caricamento strategie
-    S->>MA: calcola(esami)
-    MA-->>S: mediaA
-    S->>MP: calcola(esami)
-    MP-->>S: mediaP
-    S->>PREV: calcola(mediaP, cfu, target)
-    PREV-->>S: mediaFutura
-    Note over S: Consolidamento risultati
-```
-
 ### 5.2 Repository Pattern (Data Access)
 
 **Problema**: Senza un layer di astrazione, le query SQL sarebbero sparse nei controller, rendendo difficile la manutenzione e il testing.
 
 **Soluzione**: Centralizzare tutte le query in classi Repository.
+
+#### Diagramma di Sequenza - Accesso ai Dati (Isolamento)
+
+Mostra l'isolamento dei dati grazie alla clausola WHERE nel repository:
+
+```mermaid
+sequenceDiagram
+    participant C as Controller
+    participant R as EsameRepository
+    participant DB as Database
+  
+    C->>R: findByStudent(userId)
+    R->>DB: SELECT ... WHERE studente = :id
+    DB-->>R: Rowset (Solo dati utente)
+    R-->>C: Array Esami
+```
 
 > [!NOTE]
 > I file `EsameRepository.php` e `UtenteRepository.php` sono stati inizialmente implementati da un collega. Il mio intervento si è focalizzato sull'estensione delle loro funzionalità per supportare i requisiti di sicurezza e multi-utenza.
@@ -643,27 +664,53 @@ public function findByEmail(string $email): ?array {
 - **Riusabilità**: Posso usare `findByStudent` da qualsiasi controller
 - **Testing**: Posso mockare il repository nei test
 
-#### Diagramma di Sequenza: Accesso ai Dati
-
-Mostra l'isolamento dei dati grazie alla clausola WHERE nel repository:
-
-```mermaid
-sequenceDiagram
-    participant C as Controller
-    participant R as EsameRepository
-    participant DB as Database
-  
-    C->>R: findByStudent(userId)
-    R->>DB: SELECT ... WHERE studente = :id
-    DB-->>R: Rowset (Solo dati utente)
-    R-->>C: Array Esami
-```
-
 ### 5.3 Middleware Pattern (Sicurezza)
 
 **Problema**: Duplicazione del codice di controllo sessione in ogni endpoint protetto. Rischio di dimenticare la protezione su nuove API.
 
 **Soluzione**: Creare un componente che intercetta tutte le richieste prima del controller.
+
+#### Diagramma di Sequenza - Intercezione Middleware
+
+Descrive come il middleware protegge l'accesso alle risorse riservate:
+
+```mermaid
+sequenceDiagram
+    participant R as Router
+    participant M as AuthMiddleware
+    participant C as Controller
+  
+    R->>M: isAuthenticated()
+    Note over M: Controllo $_SESSION['user_id']
+    alt Sessione Valida
+        M-->>C: userId
+    else Sessione Non Valida
+        M-->>R: 401 Unauthorized (Exit)
+    end
+```
+
+#### Diagramma di Stato - Ciclo di Vita della Sessione
+
+Il seguente diagramma mostra la struttura logica della sessione utente:
+
+```mermaid
+graph LR
+    %% --- NODI ---
+    START(( ))
+    GUEST("Utente Guest")
+    LOGIN("Verifica Credenziali")
+    SESSION("Sessione Attiva")
+    STATS("Calcolo Statistiche")
+
+    %% --- FLUSSO ---
+    START --> GUEST
+    GUEST -- "POST /login" --> LOGIN
+    LOGIN == "Successo" ==> SESSION
+    SESSION -- "GET /stats" --> STATS
+    STATS -- "JSON" --> SESSION
+    LOGIN -- "Errore" --> GUEST
+    SESSION -- "Logout" --> GUEST
+```
 
 #### Implementazione AuthMiddleware
 
@@ -715,50 +762,6 @@ function statsEP(): void {
 - **Sicurezza**: Impossibile dimenticare il controllo
 - **Manutenibilità**: Modifiche alla logica di auth in un solo punto
 
-#### Diagramma di Sequenza: Intercezione Middleware
-
-Descrive come il middleware protegge l'accesso alle risorse riservate:
-
-```mermaid
-sequenceDiagram
-    participant R as Router
-    participant M as AuthMiddleware
-    participant C as Controller
-  
-    R->>M: isAuthenticated()
-    Note over M: Controllo $_SESSION['user_id']
-    alt Sessione Valida
-        M-->>C: userId
-    else Sessione Non Valida
-        M-->>R: 401 Unauthorized (Exit)
-    end
-```
-
-#### Diagramma di Stato (Ciclo di Vita Sessione)
-
-Il seguente diagramma mostra la struttura logica della sessione utente:
-
-```mermaid
-graph LR
-    %% --- NODI ---
-    START(( ))
-    GUEST("Utente Guest")
-    LOGIN("Verifica Credenziali")
-    SESSION("Sessione Attiva")
-    STATS("Calcolo Statistiche")
-
-    %% --- FLUSSO ---
-    START --> GUEST
-    GUEST -- "POST /login" --> LOGIN
-    LOGIN == "Successo" ==> SESSION
-    SESSION -- "GET /stats" --> STATS
-    STATS -- "JSON" --> SESSION
-    LOGIN -- "Errore" --> GUEST
-    SESSION -- "Logout" --> GUEST
-```
-
----
-
 ## 6. Implementazione Dettagliata
 
 ### 6.1 Endpoint API Implementati
@@ -774,6 +777,32 @@ graph LR
 3. Verifica la password usando `password_verify()` (confronto con hash bcrypt)
 4. Se valido, crea una sessione PHP e salva `user_id` in `$_SESSION`
 5. Rigenera l'ID sessione per prevenire Session Fixation attacks
+
+#### Diagramma di Sequenza - Flusso di Login
+
+Dettaglio dell'interazione durante la creazione della sessione:
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant L as LoginController
+    participant R as UtenteRepository
+    participant S as Sessione
+  
+    C->>L: POST /login (email, pwd)
+    L->>R: findByEmail(email)
+    R-->>L: utente['password_hash']
+    Note over L: password_verify(pwd, hash)
+    alt Password OK
+        L->>S: session_start()
+        L->>S: set user_id
+        L-->>C: 200 OK + User Info
+    else Errore
+        L-->>C: 401 Unauthorized
+    end
+```
+
+#### Implementazione
 
 ```php
 // src/server/api/login.php
@@ -834,30 +863,6 @@ function loginEP() {
 3. **Input Validation**: Controllo che email e password non siano vuoti
 4. **Error Handling**: Non rivelo se l'errore è email o password errata (prevenzione user enumeration)
 
-#### Diagramma di Sequenza: Flusso di Login
-
-Dettaglio dell'interazione durante la creazione della sessione:
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant L as LoginController
-    participant R as UtenteRepository
-    participant S as Sessione
-  
-    C->>L: POST /login (email, pwd)
-    L->>R: findByEmail(email)
-    R-->>L: utente['password_hash']
-    Note over L: password_verify(pwd, hash)
-    alt Password OK
-        L->>S: session_start()
-        L->>S: set user_id
-        L-->>C: 200 OK + User Info
-    else Errore
-        L-->>C: 401 Unauthorized
-    end
-```
-
 #### 6.1.2 GET /api/stats
 
 **Scopo**: Restituire tutte le statistiche dell'utente autenticato.
@@ -889,47 +894,54 @@ function statsEP(): void {
     $userId = AuthMiddleware::isAuthenticated();
 
     try {
-        $db = new DatabaseWrapper((new DatabasePDO())->pdo());
-        $esameRepo = new EsameRepository($db);
-  
-        $esami = $esameRepo->findByStudent($userId);
-
-        // Istanziazione strategie
-        $distribuzioneStrategy = new DistribuzioneVotiStrategy();
-        $trendStrategy = new TrendMedieStrategy();
-        $mediaAritmeticaStrategy = new MediaAritmetica();
-        $mediaPonderataStrategy = new MediaPonderata();
-        $mediaPrevisionaleStrategy = new MediaPrevisionale();
-
-        // Calcoli
-        $mediaA = $mediaAritmeticaStrategy->calcola($esami);
-        $mediaP = $mediaPonderataStrategy->calcola($esami);
-        $distribuzione = $distribuzioneStrategy->calcola($esami);
-        $trend = $trendStrategy->calcola($esami);
-  
-        $totCFU = 0;
-        foreach ($esami as $e) {
-            $totCFU += $e['cfu'];
-        }
-
-        $proiezione = ($mediaP * 110) / 30;
-        $cfuTotaliCorso = 180; 
-        $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
-
-        echo json_encode([
-            'mediaA' => round($mediaA, 2),
-            'mediaP' => round($mediaP, 2),
-            'proiezione' => round($proiezione, 2),
-            'cfuTotali' => $totCFU,
-            'previsione110' => $mediaFutura,
-            'distribuzioneVoti' => $distribuzione,
-            'trendMedia' => $trend
-        ]);
-
+        $data = getStatsData($userId);
+        echo json_encode($data);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => 'Internal Server Error']);
     }
+}
+
+/**
+ * Funzione di supporto per il calcolo dei dati statistici.
+ * Isola la logica di business per favorire la compatibilità con ResponseInterface.
+ */
+function getStatsData(int $userId): array {
+    $db = new DatabaseWrapper((new DatabasePDO())->pdo());
+    $esameRepo = new EsameRepository($db);
+    $esami = $esameRepo->findByStudent($userId);
+
+    // Istanziazione strategie
+    $distribuzioneStrategy = new DistribuzioneVotiStrategy();
+    $trendStrategy = new TrendMedieStrategy();
+    $mediaAritmeticaStrategy = new MediaAritmetica();
+    $mediaPonderataStrategy = new MediaPonderata();
+    $mediaPrevisionaleStrategy = new MediaPrevisionale();
+
+    // Calcoli
+    $mediaA = $mediaAritmeticaStrategy->calcola($esami);
+    $mediaP = $mediaPonderataStrategy->calcola($esami);
+    $distribuzione = $distribuzioneStrategy->calcola($esami);
+    $trend = $trendStrategy->calcola($esami);
+  
+    $totCFU = 0;
+    foreach ($esami as $e) {
+        $totCFU += $e['cfu'];
+    }
+
+    $proiezione = ($mediaP * 110) / 30;
+    $cfuTotaliCorso = 180; 
+    $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
+
+    return [
+        'mediaA' => round($mediaA, 2),
+        'mediaP' => round($mediaP, 2),
+        'proiezione' => round($proiezione, 2),
+        'cfuTotali' => $totCFU,
+        'previsione110' => $mediaFutura,
+        'distribuzioneVoti' => $distribuzione,
+        'trendMedia' => $trend
+    ];
 }
 ```
 
@@ -957,7 +969,7 @@ function statsEP(): void {
 }
 ```
 
-#### Diagramma di Sequenza (Flusso Completo)
+#### Diagramma di Sequenza - Flusso Completo API Statistiche
 
 Il seguente diagramma mostra il flusso completo di una richiesta all'endpoint `/api/stats`, includendo autenticazione, accesso al database, esecuzione delle strategie e gestione degli errori:
 
@@ -976,6 +988,8 @@ sequenceDiagram
   
     alt Session Valid
         M-->>S: userId
+        rect rgb(240, 240, 240)
+        Note over S: getStatsData(userId)
         S->>Repo: findByStudent(userId)
         Repo->>DB: SELECT * FROM esame WHERE studente = :id
         DB-->>Repo: ResultSet
@@ -991,6 +1005,7 @@ sequenceDiagram
         Strat-->>S: array
         S->>Strat: TrendMedie.calcola()
         Strat-->>S: array
+        end
   
         S-->>C: 200 OK + JSON Stats
     else Session Invalid
@@ -1229,16 +1244,16 @@ No syntax errors detected in src/server/repository/UtenteRepository.php
 
 ---
 
-## Conclusioni
+## 9. Conclusioni
 
-### Tecnologie Utilizzate
+### 9.1 Tecnologie Utilizzate
 
 - **Backend**: PHP 8.0, PDO, Sessions
 - **Database**: PostgreSQL 13
 - **Testing**: PHP Unit Testing (custom)
 - **Deployment**: Docker Compose
 
-### Riepilogo Contributi
+### 9.2 Riepilogo Contributi
 
 **File Creati**:
 
@@ -1265,5 +1280,249 @@ No syntax errors detected in src/server/repository/UtenteRepository.php
 - Strategy Pattern (5 strategie)
 - Repository Pattern (2 repository)
 - Middleware Pattern (1 middleware)
+
+### 9.3 Riepilogo Diagrammi UML
+
+Di seguito vengono riportati tutti i diagrammi realizzati per la modellazione del sistema, raccolti per una visione d'insieme:
+
+#### Diagramma di Componenti - Architettura dei Componenti
+
+```mermaid
+graph TD
+    %% Nodo Router
+    ROUTER("Router / Front Controller")
+
+    %% Layer Presentazione
+    subgraph PresentationLayer [Presentation Layer]
+        STATS("StatsController")
+        LOGIN("LoginController")
+        LOGOUT("LogoutController")
+    end
+
+    %% Layer Logica
+    subgraph BusinessLayer [Business Logic Layer]
+        AUTH("AuthMiddleware")
+        STRAT("StatisticsStrategies")
+    end
+
+    %% Layer Dati
+    subgraph DataLayer [Data Access Layer]
+        REPO_E("EsameRepository")
+        REPO_U("UtenteRepository")
+    end
+
+    %% Infrastruttura
+    subgraph InfrastructureLayer [Infrastruttura]
+        DB_WRAP("DatabaseWrapper")
+        DB[("PostgreSQL")]
+    end
+
+    %% Relazioni
+    ROUTER --> STATS
+    ROUTER --> LOGIN
+    ROUTER --> LOGOUT
+
+    STATS --> AUTH
+    STATS --> STRAT
+    STATS --> REPO_E
+
+    LOGIN --> REPO_U
+  
+    REPO_E --> DB_WRAP
+    REPO_U --> DB_WRAP
+    DB_WRAP --> DB
+```
+
+#### Diagramma di Classi - Struttura Strategy Pattern
+
+```mermaid
+classDiagram
+    direction TB
+
+    class StatsController {
+        +statsEP()
+        +getStatsData(userId) array
+    }
+
+    class MediaStrategy {
+        <<interface>>
+        +calcola(esami) float
+    }
+
+    class MediaAritmetica {
+        +calcola(esami) float
+    }
+
+    class MediaPonderata {
+        +calcola(esami) float
+    }
+
+    class MediaPrevisionale {
+        +calcola(media, cfu, target) float
+    }
+
+    class DistribuzioneVotiStrategy {
+        +calcola(esami) array
+    }
+
+    class TrendMedieStrategy {
+        +calcola(esami) array
+    }
+
+    %% L'ordine di queste tre righe determina la posizione orizzontale (Sinistra -> Destra)
+    StatsController --> MediaStrategy
+    StatsController --> DistribuzioneVotiStrategy
+    StatsController --> TrendMedieStrategy
+
+    %% Implementazioni dell'interfaccia (stanno sotto MediaStrategy)
+    MediaStrategy <|.. MediaAritmetica
+    MediaStrategy <|.. MediaPonderata
+    MediaStrategy <|.. MediaPrevisionale
+```
+
+#### Diagramma di Stato - Ciclo di Vita della Sessione
+
+```mermaid
+graph LR
+    %% --- NODI ---
+    START(( ))
+    GUEST("Utente Guest")
+    LOGIN("Verifica Credenziali")
+    SESSION("Sessione Attiva")
+    STATS("Calcolo Statistiche")
+
+    %% --- FLUSSO ---
+    START --> GUEST
+    GUEST -- "POST /login" --> LOGIN
+    LOGIN == "Successo" ==> SESSION
+    SESSION -- "GET /stats" --> STATS
+    STATS -- "JSON" --> SESSION
+    LOGIN -- "Errore" --> GUEST
+    SESSION -- "Logout" --> GUEST
+```
+
+#### Diagramma di Sequenza - Flusso Completo API Statistiche
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as Router
+    participant M as AuthMiddleware
+    participant S as StatsController
+    participant Repo as EsameRepository
+    participant DB as Database
+    participant Strat as Strategies
+
+    C->>R: GET /api/stats
+    R->>M: isAuthenticated()
+  
+    alt Session Valid
+        M-->>S: userId
+        rect rgb(240, 240, 240)
+        Note over S: getStatsData(userId)
+        S->>Repo: findByStudent(userId)
+        Repo->>DB: SELECT * FROM esame WHERE studente = :id
+        DB-->>Repo: ResultSet
+        Repo-->>S: ArrayEsami
+  
+        S->>Strat: MediaAritmetica.calcola()
+        Strat-->>S: float
+        S->>Strat: MediaPonderata.calcola()
+        Strat-->>S: float
+        S->>Strat: MediaPrevisionale.calcola()
+        Strat-->>S: float
+        S->>Strat: DistribuzioneVoti.calcola()
+        Strat-->>S: array
+        S->>Strat: TrendMedie.calcola()
+        Strat-->>S: array
+        end
+  
+        S-->>C: 200 OK + JSON Stats
+    else Session Invalid
+        M-->>C: 401 Unauthorized
+    else Database Error
+        Repo-->>S: Exception
+        S-->>C: 500 Internal Server Error
+    end
+```
+
+#### Altri Diagrammi di Sequenza
+
+- Visualizza Dettagli (Login, Middleware, Data Access, Strategie)
+
+**Diagramma di Sequenza - Flusso di Login**
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant L as LoginController
+    participant R as UtenteRepository
+    participant S as Sessione
+  
+    C->>L: POST /login (email, pwd)
+    L->>R: findByEmail(email)
+    R-->>L: utente['password_hash']
+    Note over L: password_verify(pwd, hash)
+    alt Password OK
+        L->>S: session_start()
+        L->>S: set user_id
+        L-->>C: 200 OK + User Info
+    else Errore
+        L-->>C: 401 Unauthorized
+    end
+```
+
+**Diagramma di Sequenza - Intercezione Middleware**
+
+```mermaid
+sequenceDiagram
+    participant R as Router
+    participant M as AuthMiddleware
+    participant C as Controller
+  
+    R->>M: isAuthenticated()
+    Note over M: Controllo $_SESSION['user_id']
+    alt Sessione Valida
+        M-->>C: userId
+    else Sessione Non Valida
+        M-->>R: 401 Unauthorized (Exit)
+    end
+```
+
+**Diagramma di Sequenza - Accesso ai Dati (Isolamento)**
+
+```mermaid
+sequenceDiagram
+    participant C as Controller
+    participant R as EsameRepository
+    participant DB as Database
+  
+    C->>R: findByStudent(userId)
+    R->>DB: SELECT ... WHERE studente = :id
+    DB-->>R: Rowset (Solo dati utente)
+    R-->>C: Array Esami
+```
+
+**Diagramma di Sequenza - Esecuzione Strategie Statistiche**
+
+```mermaid
+sequenceDiagram
+    participant S as StatsController
+    participant MA as MediaAritmetica
+    participant MP as MediaPonderata
+    participant PREV as MediaPrevisionale
+  
+    Note over S: Caricamento strategie
+    rect rgb(240, 240, 240)
+    Note over S: getStatsData(userId)
+    S->>MA: calcola(esami)
+    MA-->>S: mediaA
+    S->>MP: calcola(esami)
+    MP-->>S: mediaP
+    S->>PREV: calcola(mediaP, cfu, target)
+    PREV-->>S: mediaFutura
+    end
+    Note over S: Consolidamento risultati
+```
 
 ---
