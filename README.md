@@ -200,7 +200,7 @@ Il backend del progetto segue un'architettura a 3 layer:
 ```
 src/server/
 ├── api/
-│   ├── stats.php                               # [MIO] Controller statistiche
+│   ├── stats.php                         # [MIO] Controller statistiche
 │   ├── login.php                    		# [MIO] Controller autenticazione
 │   ├── logout.php                   		# [MIO] Controller logout
 │   ├── endpoints.txt                		# [MODIFICATO] Registrazione endpoint
