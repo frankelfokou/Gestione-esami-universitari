@@ -2,8 +2,6 @@
 
 ## Progetto: Gestione Esami
 
----
-
 **Autore**: Fokou Frankel
 
 **Matricola**: 352559
@@ -15,8 +13,6 @@
 ### Sommario
 
 Questa documentazione fornisce un'analisi dettagliata dei moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del sistema 'Gestione Esami'. Il documento descrive i requisiti funzionali (come il calcolo delle medie, le proiezioni di laurea e l'analisi dei trend), l'architettura del sistema basata su tre layer, e l'integrazione di design pattern fondamentali quali **Strategy**, **Repository** e **Middleware**. Sono inoltre inclusi dettagli sul processo di sviluppo iterativo, le modifiche allo schema del database, l'implementazione degli endpoint API e i protocolli di testing e verifica.
-
----
 
 ## Indice
 
@@ -57,8 +53,6 @@ Questa documentazione fornisce un'analisi dettagliata dei moduli **Statistiche (
    - 9.2 [Riepilogo Contributi](#92-riepilogo-contributi)
    - 9.3 [Riepilogo Diagrammi UML](#93-riepilogo-diagrammi-uml)
 
----
-
 ## 1. Contesto del Progetto
 
 ### 1.1 Panoramica Generale
@@ -90,8 +84,6 @@ Il mio contributo al progetto si concentra su **due moduli backend**:
 - Utilizzo del `Router` esistente per registrare i nuovi endpoint
 - Utilizzo di `DatabaseWrapper` per l'accesso ai dati
 - Creazione di `Repository` specifici per i miei moduli
-
----
 
 ## 2. Specifica e Analisi dei Requisiti
 
@@ -143,8 +135,6 @@ Il mio contributo al progetto si concentra su **due moduli backend**:
 - **RNF3 (Manutenibilità)**: Il codice deve seguire il principio Open/Closed (estensibile senza modifiche)
 - **RNF4 (Testabilità)**: Ogni strategia di calcolo deve essere testabile indipendentemente
 
----
-
 ## 3. Processo di Sviluppo
 
 ### 3.1 Metodologia Iterativa
@@ -176,8 +166,6 @@ Ho seguito un approccio **iterativo e incrementale**:
 
 - **Git Flow**: Branch separati per lo sviluppo indipendente delle features
 - **Integrazione**: Utilizzo dei componenti comuni (Router, DatabaseWrapper) sviluppati da altri membri
-
----
 
 ## 4. Architettura e Integrazione
 
@@ -311,8 +299,6 @@ graph TD
     REPO_U --> DB_WRAP
     DB_WRAP --> DB
 ```
-
----
 
 ## 5. Design Pattern Implementati
 
@@ -1071,8 +1057,6 @@ stats GET statsEP
 
 Il Router (sviluppato da altri) legge questo file e mappa automaticamente le richieste.
 
----
-
 ## 7. Modifiche al Database
 
 ### 7.1 Problema Iniziale
@@ -1133,8 +1117,6 @@ CREATE TABLE "applicazione"."esame" (
 - Ora posso eseguire query filtrate: `SELECT * FROM esame WHERE studente = :userId`
 - L'isolamento dei dati è garantito a livello di database
 - Integrità referenziale automatica
-
----
 
 ## 8. Testing e Verifica
 
@@ -1239,8 +1221,6 @@ No syntax errors detected in src/server/repository/EsameRepository.php
 $ php -l src/server/repository/UtenteRepository.php
 No syntax errors detected in src/server/repository/UtenteRepository.php
 ```
-
----
 
 ## 9. Conclusioni
 
@@ -1518,5 +1498,3 @@ sequenceDiagram
     end
     Note over S: Consolidamento risultati
 ```
-
----
