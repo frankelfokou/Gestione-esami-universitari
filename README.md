@@ -1,4 +1,4 @@
-# Documentazione Tecnica: Modulo Statistiche e Sicurezza
+# Documentazione: Modulo Statistiche e Sicurezza
 
 ## Progetto: Gestione Esami
 
@@ -8,11 +8,11 @@
 
 **Matricola**: 352559
 
-**Modulo**: Backend - Statistiche e Autenticazione/Multiutenza
+**Modulo**: [Backend - Statistiche e Autenticazione/Multiutenza](https://github.com/Progetti-ING-SW-INFO-UniPR/INGSW-2526-T7/tree/statistiche)
 
 ---
 
-Questo documento costituisce il riferimento tecnico completo per le implementazioni relative ai moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del progetto Gestione Esami.
+Questa documentazione fornisce un'analisi dettagliata dei moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del sistema 'Gestione Esami'. Il documento descrive i requisiti funzionali (come il calcolo delle medie, le proiezioni di laurea e l'analisi dei trend), l'architettura del sistema basata su tre layer, e l'integrazione di design pattern fondamentali quali **Strategy**, **Repository** e **Middleware**. Sono inoltre inclusi dettagli sul processo di sviluppo iterativo, le modifiche allo schema del database, l'implementazione degli endpoint API e i protocolli di testing e verifica.
 
 ---
 
@@ -200,7 +200,7 @@ Il backend del progetto segue un'architettura a 3 layer:
 ```
 src/server/
 ├── api/
-│   ├── stats.php                          # [MIO] Controller statistiche
+│   ├── stats.php                    		# [MIO] Controller statistiche
 │   ├── login.php                    		# [MIO] Controller autenticazione
 │   ├── logout.php                   		# [MIO] Controller logout
 │   ├── endpoints.txt                		# [MODIFICATO] Registrazione endpoint
@@ -326,44 +326,40 @@ Il seguente diagramma UML mostra la struttura completa del pattern Strategy impl
 
 ```mermaid
 classDiagram
-    direction TB
-
     class StatsController {
         +statsEP()
-        +getStatsData(userId) array
+        +getStatsData(userId)
     }
 
     class MediaStrategy {
-        <<interface>>
-        +calcola(esami) float
+        <<Interface>>
+        +calcola(esami)
     }
 
     class MediaAritmetica {
-        +calcola(esami) float
+        +calcola(esami)
     }
 
     class MediaPonderata {
-        +calcola(esami) float
+        +calcola(esami)
     }
 
     class MediaPrevisionale {
-        +calcola(media, cfu, target) float
+        +calcola(media cfu target)
     }
 
     class DistribuzioneVotiStrategy {
-        +calcola(esami) array
+        +calcola(esami)
     }
 
     class TrendMedieStrategy {
-        +calcola(esami) array
+        +calcola(esami)
     }
 
-    %% L'ordine di queste tre righe determina la posizione orizzontale (Sinistra -> Destra)
     StatsController --> MediaStrategy
     StatsController --> DistribuzioneVotiStrategy
     StatsController --> TrendMedieStrategy
 
-    %% Implementazioni dell'interfaccia (stanno sotto MediaStrategy)
     MediaStrategy <|.. MediaAritmetica
     MediaStrategy <|.. MediaPonderata
     MediaStrategy <|.. MediaPrevisionale
@@ -1337,44 +1333,40 @@ graph TD
 
 ```mermaid
 classDiagram
-    direction TB
-
     class StatsController {
         +statsEP()
-        +getStatsData(userId) array
+        +getStatsData(userId)
     }
 
     class MediaStrategy {
-        <<interface>>
-        +calcola(esami) float
+        <<Interface>>
+        +calcola(esami)
     }
 
     class MediaAritmetica {
-        +calcola(esami) float
+        +calcola(esami)
     }
 
     class MediaPonderata {
-        +calcola(esami) float
+        +calcola(esami)
     }
 
     class MediaPrevisionale {
-        +calcola(media, cfu, target) float
+        +calcola(media cfu target)
     }
 
     class DistribuzioneVotiStrategy {
-        +calcola(esami) array
+        +calcola(esami)
     }
 
     class TrendMedieStrategy {
-        +calcola(esami) array
+        +calcola(esami)
     }
 
-    %% L'ordine di queste tre righe determina la posizione orizzontale (Sinistra -> Destra)
     StatsController --> MediaStrategy
     StatsController --> DistribuzioneVotiStrategy
     StatsController --> TrendMedieStrategy
 
-    %% Implementazioni dell'interfaccia (stanno sotto MediaStrategy)
     MediaStrategy <|.. MediaAritmetica
     MediaStrategy <|.. MediaPonderata
     MediaStrategy <|.. MediaPrevisionale
