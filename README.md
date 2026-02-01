@@ -5,14 +5,17 @@
 >statistici, grafici (frontend JS), salvataggio "carriera" utente.  
 
 **Suddivisione Lavoro**
+- Team Leading: Aglo Alushaj
 - Componente Database: Victor Danilov
-- Sviluppo Frontend - MVP: Artjoms Ginglats
+- Sviluppo Frontend - MVP: Artjoms Ginglats & Aglo Alushaj
 - Routing System: Haxhi Teku
 - Statistiche esami: Fokou Frankel
 
 🧰**Tecnologie usate**:
 - Docker
 - Postgres
+- Javascript, HTML e CSS per il frontend
+- PHP, nginx per il backend
 
 
 📋**TO DO**(non in ordine):
