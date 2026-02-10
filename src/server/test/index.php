@@ -8,6 +8,8 @@
 </head>
 <body>
   <h2>List of test units</h2>
-  <a href="./Router_test.php">Test Page for Router</a>
+  <a href="./RouterTest.php">Test Page for Router</a><br />
+  <a href="./RequestTest.php">Test Page for Request</a><br />
+  <a href="./ResponseTest.php">Test Page for Response</a><br />
 </body>
 </html>

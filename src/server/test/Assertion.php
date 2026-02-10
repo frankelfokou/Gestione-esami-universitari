@@ -117,12 +117,11 @@ class Assertion {
      */
     public static function assertInstanceOf($expectedClass, $actualObject, string $message = '') {
       if (!is_object($actualObject)) {
-        throw new Exception($message ?: "Expected an object, but got a non-object.");
+        throw new Exception($message ? : "Expected an object, but got a non-object.");
       }
 
       if (!$actualObject instanceof $expectedClass) {
-        // throw new Exception($message ?: "Expected instance of '$expectedClass', but got instance of '" . get_class($actualObject) . "'.");
-        throw new Exception($message ?: "Expected instance of {$$expectedClass}, but got instance of " . get_class($actualObject) . ".");
+        throw new Exception($message ? : "Expected instance of {$$expectedClass}, but got instance of " . get_class($actualObject) . ".");
       }
     }
 
