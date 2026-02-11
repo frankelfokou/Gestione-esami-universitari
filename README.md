@@ -31,8 +31,31 @@
 - [ ] Frontend
     - [x] Sviluppo
         - [x] MVP
-        - [] Delete button
-        - [] Plot grafici statistiche
+        - [ ] Delete button
+        - [ ] Plot grafici statistiche
 
 - [ ] Backend
+    - [X] API Routing System
+        - [x] Router Class
+        - [x] Response Class
+        - [x] Request Class
+        - [x] Classi per l'implementazione dei design pattern
+
+        #### Per i test, nella cartella src/server/test (istruzioni contenute nella documentazione)
+        - RouterTest.php
+        - ResponseTest.php
+        - RequestTest.php
+        - [x] Test per Router Class
+        - [x] Test per Router Class
+        - [x] Test per Router Class
+        - [x] Test per Response Class
+        - [x] Test per Response Class
+        - [x] Test per Response Class
+        - [x] Test per Request Class
+
+        #### Per la documentazione, nella cartella docs
+        - documentazione_router.pdf
+        - documentazione_response.pdf
+        - documentazione_request.pdf)
+        - [x] Documentazione per Router, Response e Request
  
