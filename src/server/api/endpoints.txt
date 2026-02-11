@@ -1,3 +1,5 @@
 login POST loginEP
 register POST registerEP
-esami GET esamiEP
+exams GET examsEP
+stats GET statsEP
+logout POST logoutEP

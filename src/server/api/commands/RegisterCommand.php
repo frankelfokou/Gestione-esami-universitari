@@ -6,6 +6,9 @@
   require_once(dirname(__FILE__, 3) . '/Request.php');
   require_once(dirname(__FILE__, 3) . '/Response.php');
 
+  // Rimuvere il commento sotto quando fai la merge
+  // require_once(dirname(__FILE__, 2) . '/register.php');
+
   class RegisterCommand implements CommandInterface {
     public function execute(Request $request): Response {
       $result = registerEP();

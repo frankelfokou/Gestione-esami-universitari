@@ -127,7 +127,7 @@
     }
 
     private static function testRouterInitialization(): void {
-      echo "<h3> - Creazione dell'istanza di Router' - </h3>";
+      echo "<h3> - Creazione dell'istanza di Router - </h3>";
 
       $router = self::createTestRouter();
 

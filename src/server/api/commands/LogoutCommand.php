@@ -7,6 +7,9 @@
   require_once(dirname(__FILE__, 3) . '/Request.php');
   require_once(dirname(__FILE__, 3) . '/Response.php');
 
+  // Rimuvere il commento sotto quando fai la merge
+  // require_once(dirname(__FILE__, 2) . '/logout.php');
+
   class LogoutCommand implements CommandInterface {
     public function execute(Request $request): Response {
       $result = logoutEP();
