@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestione Esami</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light-purple">
+
+<div class="container mt-5">
+    <div class="row">
+        
+        <div class="col-lg-8">
+            <div class="table-container shadow-sm">
+                <table class="table table-hover mb-0" id="examTable">
+                    <thead class="bg-primary-custom text-white">
+                        <tr>
+                            <th><input type="text" class="form-control form-control-sm" placeholder="Materia"></th>
+                            <th><input type="number" class="form-control form-control-sm" placeholder="Voto"></th>
+                            <th><input type="date" class="form-control form-control-sm"></th>
+                            <th><input type="number" class="form-control form-control-sm" placeholder="CFU"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="examTableBody">
+                        <tr>
+                            <td>Analisi 1</td>
+                            <td>28</td>
+                            <td>2023-01-20</td>
+                            <td>9</td>
+                        </tr>
+                        <tr>
+                            <td>Fisica</td>
+                            <td>25</td>
+                            <td>2023-02-15</td>
+                            <td>6</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="add-bar bg-primary-custom text-center p-2">
+                    <button class="btn btn-light btn-sm rounded-circle" id="btnAddExam">
+                        <i class="fa-solid fa-plus text-primary-custom"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="stats-container">
+                
+                <div class="stat-row d-flex align-items-center mb-3">
+                    <div class="stat-label bg-secondary-custom text-white p-2 rounded me-2 w-50 text-center">
+                        Media Aritmetica
+                    </div>
+                    <div class="stat-value bg-primary-custom text-white p-2 rounded w-50 text-center" id="mediaAritmeticaVal">
+                        --
+                    </div>
+                </div>
+
+                <div class="stat-row d-flex align-items-center mb-3">
+                    <div class="stat-label bg-secondary-custom text-white p-2 rounded me-2 w-50 text-center">
+                        Media Ponderata
+                    </div>
+                    <div class="stat-value bg-primary-custom text-white p-2 rounded w-50 text-center" id="mediaPonderataVal">
+                        --
+                    </div>
+                </div>
+
+                <div class="spacer" style="height: 50px;"></div>
+
+                <div class="stat-row d-flex align-items-center mb-3">
+                    <div class="stat-label bg-secondary-custom text-white p-2 rounded me-2 w-50 text-center">
+                        Proiezione<br>voto laurea
+                    </div>
+                    <div class="stat-value bg-primary-custom text-white p-2 rounded w-50 text-center" id="proiezioneVal">
+                        --
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/main.js" type="module"></script>
+</body>
+</html>
