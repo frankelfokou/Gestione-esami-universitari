@@ -12,9 +12,9 @@ Questo documento raccoglie in modo coeso tutte le informazioni estratte dai file
    - 1.1 [Classi di Utenti](#classi-di-utenti)
    - 1.2 [Vincoli Espliciti e Requisiti Non Funzionali](#vincoli-espliciti-e-requisiti-non-funzionali)
    - 1.3 [Moduli Funzionali Chiave](#moduli-funzionali-chiave)
-2. [Analisi dei Casi D'Uso (Use Cases)](#2-analisi-dei-casi-duso-use-cases)
-   - 2.1 [Diagramma dell'Architettura del Sistema](#diagramma-dellarchitettura-del-sistema-visualizzazione-logica)
-   - 2.2 [Relazione dei Casi D'Uso](#relazione-dei-casi-duso)
+2. [Analisi dei Casi D&#39;Uso (Use Cases)](#2-analisi-dei-casi-duso-use-cases)
+   - 2.1 [Diagramma dell&#39;Architettura del Sistema](#diagramma-dellarchitettura-del-sistema-visualizzazione-logica)
+   - 2.2 [Relazione dei Casi D&#39;Uso](#relazione-dei-casi-duso)
    - 2.3 [Flusso di Sequenza: Da Utente a Database](#flusso-di-sequenza-da-utente-a-database)
 3. [Architettura di Sistema e Deployment](#3-architettura-di-sistema-e-deployment)
    - 3.1 [Diagramma delle Classi Principali](#diagramma-delle-classi-principali-class-diagram)
@@ -43,7 +43,6 @@ Questo documento raccoglie in modo coeso tutte le informazioni estratte dai file
 9. [Gestione della Sicurezza](#9-gestione-della-sicurezza)
 
 ---
-
 
 ## 1. Specifiche dei Requisiti Software (SRS)
 
@@ -85,7 +84,7 @@ Questa sezione descrive i flussi operativi e l'interazione degli attori con il s
 Come delineato dalle specifiche dei casi d'uso, l'applicativo mantiene una stretta direttiva MVP per il frontend, il quale dialoga con una divisione logica e a strati del backend PHP.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     subgraph Frontend [Area Client - Architettura MVP]
         UI[View Layer\nHTML / CSS / JS]
@@ -110,7 +109,7 @@ flowchart TD
 Tutte le interazioni ruotano attorno allo `Studente`, considerato attore protagonista primario per la stragrande maggioranza dei flussi.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart LR
     Actor((Studente Autenticato))
 
@@ -188,7 +187,7 @@ sequenceDiagram
 Rappresentazione della struttura orientata agli oggetti con i layer isolati Front-end e Back-end.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 classDiagram
     class ExamPresenter {
         -view ExamView
@@ -267,7 +266,7 @@ classDiagram
 Il diagramma dei componenti illustra la struttura ad alto livello e le interazioni tra i componenti principali dell'applicazione.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart LR
     nginx[Frontend Nginx]
     subgraph Backend
@@ -292,7 +291,7 @@ flowchart LR
 Organizzazione dei container sul Docker Host.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     subgraph Host["Docker Host"]
         subgraph F_Cont["Container: Frontend"]
@@ -320,7 +319,7 @@ flowchart TD
 Flusso di avvio del database e mount dei volumi da parte di Docker Compose.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 sequenceDiagram
     participant dc as Docker Compose
     participant pg as PostgreSQL Container
@@ -342,7 +341,7 @@ sequenceDiagram
 Flusso delle operazioni per il primo avvio dei container e inizializzazione del database.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     A([docker-compose up -d]) --> B[Avvio servizi: 1.db, 2.backend, 3.frontend]
     B --> C{Volume DB inizializzato?}
@@ -455,7 +454,7 @@ Il cuore del router è strutturato utilizzando il Pattern Command. Questo patter
 **Perchè**: Senza il Pattern Command si finirebbe ad ottenere un immenso blocco `switch-case` instradante. L'adozione del pattern Command consente una modularità pressoché infinita. L'esecuzione dei vari receiver resta pulita e fortemente testabile.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 classDiagram
     direction LR
 
@@ -496,7 +495,7 @@ classDiagram
 #### Architettura di Sistema Globale
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 classDiagram
     class Router
     class Request
@@ -554,7 +553,7 @@ sequenceDiagram
 Ogni operazione logica viene controllata con uno schema ad albero. In caso di fallimento in un qualsiasi snodo, il processing viene interrotto per restituire un JSON di errore coerente senza lanciare fatal error applicativi.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     Req[Richiesta Ricevuta] --> R_Esiste{Route Esiste?}
     R_Esiste -- No --> R_Err1[Errore: ROUTE_NON_TROVATA]
@@ -636,7 +635,7 @@ sequenceDiagram
 #### Modello del Flusso dei Dati (Data Flow)
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart LR
     subgraph Input Grezzi
         Req[Richiesta HTTP]
@@ -710,7 +709,7 @@ sequenceDiagram
 L'oggetto `Request` viene passato al Router, il quale incapsula ciascun endpoint sotto forma di un "Comando".
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     C[Client HTTP] -->|Invio Dati| R[Richiesta HTTP]
     R --> OReq["Oggetto Request (Interfaccia type-safe)"]
@@ -746,7 +745,7 @@ La creazione della `Response` segue il Pattern Builder, fondamentale a causa del
 **Perchè**: Invece di avere un costruttore monolitico estremamente verboso, la separazione in una classe `ResponseBuilder` permette una creazione "step-by-step" con interfacce fluenti (chaining dei metodi come `->withSuccess()->withData()`). Ciò massimizza la leggibilità, accentra la logica di validazione nel metodo finale `build()` e mantiene la classe `Response` totalmente immutabile, senza alcun setter.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 classDiagram
     direction LR
     class ResponseBuilder {
@@ -783,7 +782,7 @@ classDiagram
 Questo diagramma mostra il processo completo che il Builder esegue per istanziare e produrre l'output finale, includendo tutti i passaggi di validazione e la fallback di codifica.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 flowchart TD
     Start((Start)) --> Call[Client chiama metodi builder]
     Call --> Builder[Builder imposta proprieta in stato intermedio]
@@ -824,7 +823,7 @@ Il database rappresenta il livello di persistenza dell'applicazione "Gestione Es
 #### Schema Entity-Relationship (ER)
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 erDiagram
     utente ||--o{ carriera : "ha"
     utente {
@@ -1022,7 +1021,7 @@ Questo modulo copre l'analisi dettagliata dei moduli Statistiche (Analytics) e S
 Incapsula ogni algoritmo di calcolo in una classe dedicata, facilitando l'estensione senza modificare il controller.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 classDiagram
     class StatsController {
         +statsEP()
@@ -1067,7 +1066,7 @@ classDiagram
 Centralizzazione di tutte le query in Repository dedicate (es. `EsameRepository`, `UtenteRepository`), permettendo di incapsulare l'isolamento dei dati.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 sequenceDiagram
     participant Controller
     participant EsameRepository
@@ -1084,7 +1083,7 @@ sequenceDiagram
 Crea un componente che intercetta tutte le richieste per convalidare l'autenticazione prima del controller.
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 sequenceDiagram
     participant Router
     participant AuthMiddleware
@@ -1102,7 +1101,7 @@ sequenceDiagram
 ### Flusso di Login
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 sequenceDiagram
     participant Client
     participant LoginController
@@ -1167,7 +1166,7 @@ sequenceDiagram
 ### Ciclo di Vita della Sessione
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+
 stateDiagram-v2
     [*] --> UtenteGuest
     state UtenteGuest {
