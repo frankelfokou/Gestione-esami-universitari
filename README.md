@@ -1,1309 +1,1028 @@
-# Documentazione: Modulo Statistiche e Sicurezza
+# Documentazione di Progetto: Gestione-esami-universitari
 
 ## Sommario
 
-Questa documentazione fornisce un'analisi dettagliata dei moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del sistema 'Gestione Esami'. Il documento descrive i requisiti funzionali (come il calcolo delle medie, le proiezioni di laurea e l'analisi dei trend), l'architettura del sistema basata su tre layer, e l'integrazione di design pattern fondamentali quali **Strategy**, **Repository** e **Middleware**. Sono inoltre inclusi dettagli sul processo di sviluppo iterativo, le modifiche allo schema del database, l'implementazione degli endpoint API e i protocolli di testing e verifica.
+Questo documento raccoglie in modo coeso tutte le informazioni estratte dai file di documentazione originali del progetto **Gestione-esami-universitari**, trasponendo i diagrammi nel formato testuale Mermaid e organizzandoli secondo una gerarchia logica che va dai requisiti all'implementazione tecnica. Il sistema è un'applicazione web per il tracciamento della carriera universitaria, sviluppata con un frontend MVP in Vanilla JavaScript, un backend PHP nativo e un database PostgreSQL, il tutto orchestrato tramite Docker Compose.
+
+---
 
 ## Indice
 
-1. [Contesto del Progetto](#1-contesto-del-progetto)
-   - 1.1 [Panoramica Generale](#11-panoramica-generale)
-   - 1.2 [Ambito di Responsabilità](#12-ambito-di-responsabilità)
-2. [Specifica e Analisi dei Requisiti](#2-specifica-e-analisi-dei-requisiti)
-   - 2.1 [Requisiti Funzionali - Modulo Statistiche](#21-requisiti-funzionali---modulo-statistiche)
-   - 2.2 [Requisiti Funzionali - Modulo Sicurezza](#22-requisiti-funzionali---modulo-sicurezza)
-   - 2.3 [Requisiti Non Funzionali](#23-requisiti-non-funzionali)
-3. [Processo di Sviluppo](#3-processo-di-sviluppo)
-   - 3.1 [Metodologia Iterativa](#31-metodologia-iterativa)
-   - 3.2 [Lavoro in Team](#32-lavoro-in-team)
-4. [Architettura e Integrazione](#4-architettura-e-integrazione)
-   - 4.1 [Architettura a 3 Layer (Contesto)](#41-architettura-a-3-layer-contesto)
-   - 4.2 [Componenti da Me Sviluppati](#42-componenti-da-me-sviluppati)
-   - 4.3 [Integrazione con Componenti Esistenti](#43-integrazione-con-componenti-esistenti)
-5. [Design Pattern Implementati](#5-design-pattern-implementati)
-   - 5.1 [Strategy Pattern (Statistiche)](#51-strategy-pattern-statistiche)
-   - 5.2 [Repository Pattern (Data Access)](#52-repository-pattern-data-access)
-   - 5.3 [Middleware Pattern (Sicurezza)](#53-middleware-pattern-sicurezza)
-6. [Implementazione Dettagliata](#6-implementazione-dettagliata)
-   - 6.1 [Endpoint API Implementati](#61-endpoint-api-implementati)
-     - 6.1.1 [POST /api/login](#611-post-apilogin)
-     - 6.1.2 [GET /api/stats](#612-get-apistats)
-     - 6.1.3 [POST /api/logout](#613-post-apilogout)
-   - 6.2 [Registrazione Endpoint](#62-registrazione-endpoint)
-7. [Modifiche al Database](#7-modifiche-al-database)
-   - 7.1 [Problema Iniziale](#71-problema-iniziale)
-   - 7.2 [Soluzione Implementata](#72-soluzione-implementata)
-   - 7.3 [Schema Finale (Estratto Rilevante)](#73-schema-finale-estratto-rilevante)
-8. [Testing e Verifica](#8-testing-e-verifica)
-   - 8.1 [Unit Testing](#81-unit-testing)
-   - 8.2 [Esecuzione Test](#82-esecuzione-test)
-   - 8.3 [Verifica Sintattica](#83-verifica-sintattica)
-9. [Conclusioni](#9-conclusioni)
-   - 9.1 [Tecnologie Utilizzate](#91-tecnologie-utilizzate)
-   - 9.2 [Riepilogo Contributi](#92-riepilogo-contributi)
-   - 9.3 [Riepilogo Diagrammi UML](#93-riepilogo-diagrammi-uml)
-
-## 1. Contesto del Progetto
-
-### 1.1 Panoramica Generale
-
-Il sistema "Gestione Esami" è un'applicazione web per il tracciamento della carriera universitaria, sviluppata in team utilizzando:
-
-- **Frontend**: Vanilla JavaScript con pattern MVP (Model-View-Presenter)
-- **Backend**: PHP 8.0 con architettura a layer
-- **Database**: PostgreSQL 13
-- **Deployment**: Docker Compose (3 container: frontend, backend, db)
-
-### 1.2 Ambito di Responsabilità
-
-Il mio contributo al progetto si concentra su **due moduli backend**:
-
-1. **Modulo Statistiche**: Sistema di calcolo e analisi delle performance accademiche
-2. **Modulo Sicurezza**: Implementazione di autenticazione e multi-tenancy
-
-**Componenti Sviluppati**:
-
-- 5 Strategie di calcolo statistico
-- Sistema di autenticazione (login/logout)
-- Middleware di protezione endpoint
-- Modifiche allo schema database per multi-utenza
-- Unit test per le strategie
-
-**Integrazione con Componenti Esistenti**:
-
-- Utilizzo del `Router` esistente per registrare i nuovi endpoint
-- Utilizzo di `DatabaseWrapper` per l'accesso ai dati
-- Creazione di `Repository` specifici per i miei moduli
-
-## 2. Specifica e Analisi dei Requisiti
-
-### 2.1 Requisiti Funzionali - Modulo Statistiche
-
-#### RF1: Calcolo Medie Base
-
-- **RF1.1**: Il sistema deve calcolare la media aritmetica degli esami sostenuti
-- **RF1.2**: Il sistema deve calcolare la media ponderata (pesata sui CFU)
-
-**Giustificazione**: Le medie sono metriche fondamentali per valutare il rendimento accademico. La media ponderata è quella ufficialmente utilizzata per il calcolo del voto di laurea.
-
-#### RF2: Proiezioni e Forecasting
-
-- **RF2.1**: Il sistema deve proiettare il voto di laurea basandosi sulla media ponderata attuale
-- **RF2.2**: Il sistema deve calcolare la media futura necessaria per raggiungere un obiettivo di laurea specifico
-
-**Giustificazione**: Questi strumenti permettono allo studente di pianificare strategicamente la propria carriera, rispondendo alla domanda: *"Che media devo mantenere per laurearmi con 110?"*
-
-#### RF3: Analisi Avanzate
-
-- **RF3.1**: Il sistema deve fornire la distribuzione dei voti per fasce (18-21, 22-24, 25-27, 28-29, 30, 30L)
-- **RF3.2**: Il sistema deve mostrare l'evoluzione temporale della media ponderata
-
-**Giustificazione**: La distribuzione permette di valutare la costanza del rendimento, mentre il trend temporale evidenzia miglioramenti o peggioramenti nel tempo.
-
-### 2.2 Requisiti Funzionali - Modulo Sicurezza
-
-#### RF4: Autenticazione
-
-- **RF4.1**: Il sistema deve autenticare gli utenti tramite email e password
-- **RF4.2**: Il sistema deve mantenere sessioni sicure
-- **RF4.3**: Il sistema deve permettere il logout con distruzione completa della sessione
-
-**Giustificazione**: L'autenticazione è il prerequisito per implementare la multi-utenza in modo sicuro.
-
-#### RF5: Multi-tenancy e Isolamento Dati
-
-- **RF5.1**: Ogni utente deve visualizzare esclusivamente i propri esami
-- **RF5.2**: Le query al database devono filtrare automaticamente per utente autenticato
-- **RF5.3**: Non deve essere possibile accedere ai dati di altri utenti
-
-**Giustificazione**: La privacy dei dati è un requisito fondamentale. L'isolamento deve essere garantito sia a livello applicativo che a livello di database.
-
-### 2.3 Requisiti Non Funzionali
-
-- **RNF1 (Performance)**: Le API statistiche devono rispondere entro 200ms per dataset tipici (< 50 esami)
-- **RNF2 (Sicurezza)**: Le password devono essere hashate con bcrypt
-- **RNF3 (Manutenibilità)**: Il codice deve seguire il principio Open/Closed (estensibile senza modifiche)
-- **RNF4 (Testabilità)**: Ogni strategia di calcolo deve essere testabile indipendentemente
-
-## 3. Processo di Sviluppo
-
-### 3.1 Metodologia Iterativa
-
-Ho seguito un approccio **iterativo e incrementale**:
-
-**Iterazione 1 - Statistiche Base**:
-
-1. Analisi dei requisiti RF1
-2. Design del pattern Strategy
-3. Implementazione `MediaAritmetica` e `MediaPonderata`
-4. Testing manuale
-
-**Iterazione 2 - Sicurezza e Forecasting**:
-
-1. Analisi dei requisiti RF2, RF4, RF5
-2. Design del Middleware Pattern
-3. Implementazione autenticazione e `MediaPrevisionale`
-4. Modifica schema database (aggiunta FK `studente`)
-
-**Iterazione 3 - Analisi Avanzate**:
-
-1. Analisi dei requisiti RF3
-2. Implementazione `DistribuzioneVotiStrategy` e `TrendMedieStrategy`
-3. Unit testing completo
-4. Documentazione
-
-### 3.2 Lavoro in Team
-
-- **Git Flow**: Branch separati per lo sviluppo indipendente delle features
-- **Integrazione**: Utilizzo dei componenti comuni (Router, DatabaseWrapper) sviluppati da altri membri
-
-## 4. Architettura e Integrazione
-
-### 4.1 Architettura a 3 Layer (Contesto)
-
-Il backend del progetto segue un'architettura a 3 layer:
-
-```
-┌─────────────────────────────────────┐
-│   Presentation Layer                │  ← API Controllers
-├─────────────────────────────────────┤
-│   Business Logic Layer              │  ← Strategies, Middleware (MIO LAVORO)
-├─────────────────────────────────────┤
-│   Data Access Layer                 │  ← Repositories (MODIFICATO), DatabaseWrapper
-└─────────────────────────────────────┘
-```
-
-### 4.2 Componenti da Me Sviluppati
-
-**Struttura File e Cartelle**:
-
-```
-src/server/
-├── api/
-│   ├── stats.php                    		# [MIO] Controller statistiche
-│   ├── login.php                    		# [MIO] Controller autenticazione
-│   ├── logout.php                   		# [MIO] Controller logout
-│   ├── endpoints.txt                		# [MODIFICATO] Registrazione endpoint
-│   ├── middleware/
-│   │   └── AuthMiddleware.php       		# [MIO] Middleware autenticazione
-│   └── strategies/
-│       ├── MediaAritmetica.php      		# [MIO] Strategia media aritmetica
-│       ├── MediaPonderata.php       		# [MIO] Strategia media ponderata
-│       ├── MediaPrevisionale.php    		# [MIO] Strategia forecasting
-│       ├── DistribuzioneVotiStrategy.php  	# [MIO] Strategia distribuzione
-│       └── TrendMedieStrategy.php   		# [MIO] Strategia trend temporale
-├── repository/
-│   ├── EsameRepository.php          		# [MODIFICATO] Integrazione multi-tenancy
-│   └── UtenteRepository.php         		# [MODIFICATO] Integrazione autenticazione
-└── test/
-    └── unit/
-        └── StrategiesTest.php       		# [MIO] Unit test strategie
-
-src/sql/
-└── init.sql                         		# [MODIFICATO] Aggiunta FK studente
-```
-
-**Business Logic Layer**:
-
-- `MediaAritmetica.php`
-- `MediaPonderata.php`
-- `MediaPrevisionale.php`
-- `DistribuzioneVotiStrategy.php`
-- `TrendMedieStrategy.php`
-- `AuthMiddleware.php`
-
-**Presentation Layer**:
-
-- `stats.php` (Controller statistiche)
-- `login.php` (Controller autenticazione)
-- `logout.php` (Controller logout)
-
-**Data Access Layer**:
-
-- `EsameRepository.php` (Esteso con filtro per studente)
-- `UtenteRepository.php` (Esteso con ricerca per email)
-
-**Testing**:
-
-- `StrategiesTest.php` (Unit test)
-
-### 4.3 Integrazione con Componenti Esistenti
-
-**Router** (sviluppato da altri):
-
-- Ho registrato i miei endpoint in `endpoints.txt`
-- Il Router gestisce il dispatching delle richieste ai miei controller
-
-**DatabaseWrapper** (sviluppato da altri):
-
-- Ho utilizzato i metodi `fetchAll()`, `fetchOne()`, `execute()` nei miei Repository
-- Non ho modificato il wrapper, solo utilizzato
-- Ho esteso `EsameRepository.php` e `UtenteRepository.php` con funzioni necessarie per garantire la segregazione dei dati
-
-#### Diagramma di Componenti - Architettura dei Componenti
-
-Il seguente diagramma mostra come i miei componenti si integrano con l'architettura esistente, organizzati per layer logici:
+1. [Specifiche dei Requisiti Software (SRS)](#1-specifiche-dei-requisiti-software-srs)
+   - 1.1 [Classi di Utenti](#classi-di-utenti)
+   - 1.2 [Vincoli Espliciti e Requisiti Non Funzionali](#vincoli-espliciti-e-requisiti-non-funzionali)
+   - 1.3 [Moduli Funzionali Chiave](#moduli-funzionali-chiave)
+2. [Analisi dei Casi D'Uso (Use Cases)](#2-analisi-dei-casi-duso-use-cases)
+   - 2.1 [Diagramma dell'Architettura del Sistema](#diagramma-dellarchitettura-del-sistema-visualizzazione-logica)
+   - 2.2 [Relazione dei Casi D'Uso](#relazione-dei-casi-duso)
+   - 2.3 [Flusso di Sequenza: Da Utente a Database](#flusso-di-sequenza-da-utente-a-database)
+3. [Architettura di Sistema e Deployment](#3-architettura-di-sistema-e-deployment)
+   - 3.1 [Diagramma delle Classi Principali](#diagramma-delle-classi-principali-class-diagram)
+   - 3.2 [Database Component Diagram](#database-component-diagram)
+   - 3.3 [Deployment Diagram](#deployment-diagram)
+   - 3.4 [Inizializzazione Database](#inizializzazione-database-sequence)
+4. [Frontend: Architettura MVP](#4-frontend-architettura-mvp)
+   - 4.1 [ExamModel](#exammodel)
+   - 4.2 [ExamView](#examview)
+   - 4.3 [ExamPresenter](#exampresenter)
+5. [Backend: Componenti Core](#5-backend-componenti-core)
+   - 5.1 [Componente Router](#51-componente-router)
+   - 5.2 [Componente Request](#52-componente-request)
+   - 5.3 [Componente Response](#53-componente-response)
+6. [Persistenza: Componente Database](#6-persistenza-componente-database)
+   - 6.1 [Schema Entity-Relationship (ER)](#schema-entity-relationship-er)
+   - 6.2 [Repository Pattern](#repository-pattern)
+7. [Livello API e Contratti (REST)](#7-livello-api-e-contratti-rest)
+   - 7.1 [Standardizzazione della Risposta](#standardizzazione-della-risposta-response-envelope)
+   - 7.2 [Endpoints Principali](#endpoints-principali-definiti)
+8. [Modulo Statistiche e Sicurezza](#8-modulo-statistiche-e-sicurezza)
+   - 8.1 [Strategy Pattern (Statistiche)](#design-pattern-strategy-pattern-statistiche)
+   - 8.2 [Repository Pattern (Data Access)](#design-pattern-repository-pattern-data-access)
+   - 8.3 [Middleware Pattern (Sicurezza)](#design-pattern-middleware-pattern-sicurezza)
+   - 8.4 [Flusso Completo API Statistiche](#flusso-completo-api-statistiche)
+9. [Gestione della Sicurezza](#9-gestione-della-sicurezza)
+
+---
+
+
+## 1. Specifiche dei Requisiti Software (SRS)
+
+**Fonte**: `docs/software_requirements_document.pdf`
+
+Il Sistema di Gestione Esami è un'applicazione web autonoma progettata per permettere agli studenti universitari di tracciare, analizzare e proiettare il loro rendimento accademico.
+
+### Classi di Utenti
+
+1. **Utente Ospite**: Livello di accesso limitato. Può esplorare pagine pubbliche, registrarsi al sistema o effettuare il login, ma non può inserire o visualizzare dati accademici privati.
+2. **Utente Registrato (Studente)**: Accesso completo all'applicativo. Gestisce i propri esami, visualizza statistiche e calcola proiezioni in modo isolato (Multi-Tenancy).
+3. **Amministratore**: Visione globale sul sistema per controlli e supervisione avanzata (opzionale/futura implementazione).
+
+### Vincoli Espliciti e Requisiti Non Funzionali
+
+- Stack Frontend: **HTML, CSS, Vanilla JavaScript** (Nessun framework reattivo come React/Vue).
+- Pattern Frontend: obbligo di utilizzare il **Model-View-Presenter (MVP)**.
+- Stack Backend: **PHP** senza l'ausilio di framework esterni (no Laravel/Symfony).
+- Architettura d'interfacciamento: comunicazione solo via API **RESTful** JSON.
+- Design Patterns: impiego di almeno 2 pattern di progettazione accademici per modulare il software.
+
+### Moduli Funzionali Chiave
+
+1. **Autenticazione e Sicurezza (RF-01, RF-02)**: Meccanismi di registrazione e Login. Il sistema deve prevenire brute-forcing tramite Rate Limiting IP (5 tentativi l'ora) e blocchi account temporanei. Le password devono possedere una certa complessità e subire un corretto processo di cifratura/hashing.
+2. **Gestione Esami (RF-04, 05, 06)**: Lo studente deve poter operare CRUD sugli esami. Vi è validazione logica stringente: nessuna data nel futuro, i voti devono ricalcare la metrica europea (18-30 o Lode), i CFU devono essere corretti. Qualsiasi modifica riflette automaticamente nuovi valori statistici in tempo reale.
+3. **Calcoli Statistici (RF-07, 08)**: Calcolo automatico di Media Aritmetica, Media Ponderata, Crediti totali/rimanenti. Proiezione del voto di laurea derivata matematicamente (stima conservativa).
+4. **Visualizzazione (RF-09, 10)**: Istogrammi di distribuzione voti, linea della media ponderata temporale e cruscotto Dashboard unificato che raccoglie in breve le metriche più vitali della propria carriera.
+
+---
+
+## 2. Analisi dei Casi D'Uso (Use Cases)
+
+**Fonte**: `docs/use_cases_model.pdf`
+
+Questa sezione descrive i flussi operativi e l'interazione degli attori con il sistema dall'alto livello applicativo.
+
+### Diagramma dell'Architettura del Sistema (Visualizzazione Logica)
+
+Come delineato dalle specifiche dei casi d'uso, l'applicativo mantiene una stretta direttiva MVP per il frontend, il quale dialoga con una divisione logica e a strati del backend PHP.
 
 ```mermaid
-graph TD
-    %% Nodo Router
-    ROUTER("Router")
-
-    %% Layer Presentazione
-    subgraph PresentationLayer [Presentation Layer]
-        STATS("StatsController")
-        LOGIN("LoginController")
-        LOGOUT("LogoutController")
-    end
-
-    %% Layer Logica
-    subgraph BusinessLayer [Business Logic Layer]
-        AUTH("AuthMiddleware")
-        STRAT("StatisticsStrategies")
-    end
-
-    %% Layer Dati
-    subgraph DataLayer [Data Access Layer]
-        REPO_E("EsameRepository")
-        REPO_U("UtenteRepository")
-    end
-
-    %% Infrastruttura
-    subgraph InfrastructureLayer [Infrastruttura]
-        DB_WRAP("DatabaseWrapper")
-        DB[("PostgreSQL")]
-    end
-
-    %% Relazioni
-    ROUTER --> STATS
-    ROUTER --> LOGIN
-    ROUTER --> LOGOUT
-
-    STATS --> AUTH
-    STATS --> STRAT
-    STATS --> REPO_E
-
-    LOGIN --> REPO_U
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    subgraph Frontend [Area Client - Architettura MVP]
+        UI[View Layer\nHTML / CSS / JS]
+        Presenter[Presenter\nBusiness Logic Coordinator]
   
-    REPO_E --> DB_WRAP
-    REPO_U --> DB_WRAP
-    DB_WRAP --> DB
+        UI <-->|Azioni Utente / Aggiornamento| Presenter
+    end
+
+    subgraph Backend [Area Server]
+        API[HTTP Endpoints REST API]
+        Model[Modello PHP\nBusiness Logic]
+  
+        API <-->|Dati JSON| Model
+    end
+
+    Presenter <-->|HTTP Request GET/POST\nJSON Response| API
+    Model <-->|Query SQL / DML| DB[(Database\nPostgreSQL)]
 ```
 
-## 5. Design Pattern Implementati
+### Relazione dei Casi D'Uso
 
-### 5.1 Strategy Pattern (Statistiche)
-
-**Problema**: La logica di calcolo varia (aritmetica, ponderata, previsionale, distribuzione, trend). Inserirla tutta nel controller violerebbe il Single Responsibility Principle e renderebbe il codice difficile da testare e estendere.
-
-**Soluzione**: Incapsulare ogni algoritmo in una classe dedicata.
-
-#### Diagramma di Classi - Struttura Strategy Pattern
-
-Il seguente diagramma UML mostra la struttura completa del pattern Strategy implementato:
+Tutte le interazioni ruotano attorno allo `Studente`, considerato attore protagonista primario per la stragrande maggioranza dei flussi.
 
 ```mermaid
-classDiagram
-    class StatsController {
-        +statsEP()
-        +getStatsData(userId)
-    }
+%%{init: {"theme": "default"}}%%
+flowchart LR
+    Actor((Studente Autenticato))
 
+    Actor --> UC_Auth(Autenticazione e Identita)
+    Actor --> UC_Prof(Gestisci Profilo Accademico)
+    Actor --> UC_Ex(Operazioni CRUD sugli Esami)
+    Actor --> UC_Read(Lettura Dati e Statistiche)
+
+    subgraph UC_Auth_Sub [Flusso di Identita]
+        Login
+        Logout
+        Reg[Registrazione]
+    end
+    UC_Auth --> UC_Auth_Sub
+
+    subgraph UC_Ex_Sub [Gestione Voti]
+        Add[Aggiungi Esame]
+        Mod[Modifica Esame]
+        Del[Elimina Esame]
+    end
+    UC_Ex --> UC_Ex_Sub
+
+    subgraph UC_Read_Sub [Dashboard e Analitiche]
+        View[Visualizza Carriera e Voti]
+        Stat[Calcola Statistiche]
+        Proj[Genera Proiezione Laurea]
+        Graph[Visualizzazione Grafici]
+        Exp[Esporta Dati CSV/JSON]
+    end
+    UC_Read --> UC_Read_Sub
+```
+
+### Flusso di Sequenza: Da Utente a Database
+
+L'esempio chiave di flusso completo (vertical slice) è visibile nel processo di tracciamento di una registrazione (caso applicabile idealmente anche all'inserimento di un esame).
+
+```mermaid
+sequenceDiagram
+    participant U as Utente (Ospite/Studente)
+    participant V as View (HTML form)
+    participant P as Presenter (JS)
+    participant API as REST API (Router)
+    participant C as Controller Backend
+    participant DB as Backend Database
+
+    U->>V: Compila Log/Registrazione/Esame
+    V->>P: Cattura evento invio
+    P->>P: Validazione lato client (Sanitization base)
+    P->>API: HTTP POST JSON (Es. /api/register)
+
+    rect rgba(128, 128, 128, 0.13)
+    Note over API,C: Elaborazione Server
+    API->>C: Istanzia Comando di Routing
+    C->>C: Controlla vincoli (Es. email unica / rate limit)
+    alt Dati Validi
+        C->>DB: INSERT/UPDATE record e applica Hashing
+        DB-->>C: Operazione completata (Successo)
+        C-->>API: JSON: {"success": true, ...}
+    else Errore Vincolo
+        C-->>API: JSON: {"success": false, "error": "Email duplicata"}
+    end
+    API-->>P: Risposta HTTP con JSON
+    end
+
+    P->>V: Renderizza UI o avvisi visivi
+    V-->>U: Riscontro all'utente (Successo/Errore)
+```
+
+---
+
+## 3. Architettura di Sistema e Deployment
+
+### Diagramma delle Classi Principali (Class Diagram)
+
+Rappresentazione della struttura orientata agli oggetti con i layer isolati Front-end e Back-end.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+classDiagram
+    class ExamPresenter {
+        -view ExamView
+        -model ExamModel
+        +init()
+        +onAddExam(data)
+        +onDeleteExam(id)
+        +onUpdateProfile(data)
+    }
+    class ExamView {
+        +renderTable(esami)
+        +renderChart(esami)
+        +bindEvents(handler)
+        +showError(msg)
+    }
+    class ExamModel {
+        -esami array
+        +fetchEsami()
+        +addEsame(data)
+        +updateEsame(id, data)
+        +deleteEsame(id)
+        +updateCredentials(user, pass)
+    }
+    ExamPresenter --> ExamView : Aggiorna UI
+    ExamPresenter --> ExamModel : Chiama logica
+    ExamModel ..> Router : HTTP/JSON Requests
+
+    class Router {
+        +route(url, callback)
+        +dispatch()
+    }
+    class EsameDAO {
+        -db Database
+        +getByUser(userId)
+        +insert(esame)
+        +update(esame)
+        +delete(id)
+    }
+    class UserDAO {
+        -db Database
+        +create(user, pass, nome, cognome)
+        +updateCredentials(userId, newPass)
+        +login(user, pass)
+    }
+    class JsonWebToken {
+        +generate(payload)
+        +verify(token)
+    }
+    class Database {
+        -conn PDO
+        +getInstance()
+        +query(sql, params)
+    }
     class MediaStrategy {
-        <<Interface>>
+        <<interface>>
         +calcola(esami)
     }
-
     class MediaAritmetica {
         +calcola(esami)
     }
-
     class MediaPonderata {
         +calcola(esami)
     }
 
-    class MediaPrevisionale {
-        +calcola(media cfu target)
-    }
-
-    class DistribuzioneVotiStrategy {
-        +calcola(esami)
-    }
-
-    class TrendMedieStrategy {
-        +calcola(esami)
-    }
-
-    StatsController --> MediaStrategy
-    StatsController --> DistribuzioneVotiStrategy
-    StatsController --> TrendMedieStrategy
-
-    MediaStrategy <|.. MediaAritmetica
-    MediaStrategy <|.. MediaPonderata
-    MediaStrategy <|.. MediaPrevisionale
+    Router --> EsameDAO : Gestisce Esami
+    Router --> UserDAO : Gestisce Utenti
+    Router ..> JsonWebToken : Auth Check
+    EsameDAO --> Database : SQL Query
+    UserDAO --> Database : SQL Query
+    MediaAritmetica ..|> MediaStrategy : Implementa
+    MediaPonderata ..|> MediaStrategy : Implementa
 ```
 
-#### Diagramma di Sequenza - Esecuzione Strategie Statistiche
+### Database Component Diagram
 
-Questo diagramma descrive come il controller interagisce con le diverse strategie per ottenere i calcoli:
+Il diagramma dei componenti illustra la struttura ad alto livello e le interazioni tra i componenti principali dell'applicazione.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart LR
+    nginx[Frontend Nginx]
+    subgraph Backend
+        controller[Controller]
+        bl[Business Logic]
+        repo[Repository Layer]
+        controller -->|data access| repo
+        bl -->|data access| repo
+    end
+    subgraph DB
+        pg[PostgreSQL]
+        db[(Schema applicazione)]
+        pg -.->|contains| db
+    end
+
+    nginx -->|HTTP/API| Backend
+    repo -->|SQL queries| pg
+```
+
+### Deployment Diagram
+
+Organizzazione dei container sul Docker Host.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    subgraph Host["Docker Host"]
+        subgraph F_Cont["Container: Frontend"]
+            nginx["Nginx:80"]
+        end
+        subgraph B_Cont["Container: Backend"]
+            php["PHP 8.x"]
+        end
+        subgraph D_Cont["Container: Database"]
+            pg["PostgreSQL 15"]
+            vol[("Volume: postgres_data")]
+            pg -. "persists data" .-> vol
+        end
+  
+        env_note>"Variabili d'ambiente:<br/>POSTGRES_DB=app_db<br/>POSTGRES_USER=app_user<br/>POSTGRES_PASSWORD=secret"]
+        D_Cont -.- env_note
+    end
+
+    nginx --"9000 (FastCGI)"--> php
+    php --"5432 (SQL)"--> pg
+```
+
+### Inizializzazione Database (Sequence)
+
+Flusso di avvio del database e mount dei volumi da parte di Docker Compose.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+sequenceDiagram
+    participant dc as Docker Compose
+    participant pg as PostgreSQL Container
+    participant vol as Volume Persistente
+    participant s_init as Script Init
+    participant s_seed as Script Seed
+
+    dc->>pg: start container
+    pg->>vol: mount /var/lib/postgresql/data
+    pg->>s_init: esecuzione 01_init.sql
+    s_init-->>pg: crea schema, tabelle, vincoli
+    pg->>s_seed: esecuzione 02_seed.sql
+    s_seed-->>pg: inserimento dati fittizzi
+    pg-->>dc: ready (port 5432)
+```
+
+### Diagramma di Attività: Inizializzazione Database
+
+Flusso delle operazioni per il primo avvio dei container e inizializzazione del database.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    A([docker-compose up -d]) --> B[Avvio servizi: 1.db, 2.backend, 3.frontend]
+    B --> C{Volume DB inizializzato?}
+    C -- si --> D[Carica dati esistenti]
+    C -- no --> E[Esegui 01_init.sql]
+    E --> F[Esegui 02_seed.sql]
+    F --> G{Script OK?}
+    G -- no --> H([Errore: arresta container])
+    G -- si --> D
+    D --> I[Backend: prova connessione DB]
+    I --> J{Connessione OK?}
+    J -- no --> K{Max tentativi?}
+    K -- no --> I
+    K -- si --> L([Crash backend])
+    J -- si --> M[DB risponde alla query di test?]
+    M -- no --> N[Ritenta]
+    N --> I
+    M -- si --> O[Segnala READY]
+    O --> P[Nginx avvia su :8080]
+    P --> Q([Sistema operativo])
+```
+
+---
+
+## 4. Frontend: Architettura MVP
+
+**Fonte**: `docs/Architettura MVP-wiki.pdf`
+
+Il frontend è sviluppato seguendo l'Architettura MVP (Model-View-Presenter).
+L'obiettivo di questa architettura è rendere il codice più manutenibile, facilitare il testing e separare la logica di business, l'interfaccia grafica e la logica di coordinamento.
+
+Sono state sviluppate 3 classi fondamentali: `ExamModel`, `ExamView` e `ExamPresenter`.
+
+### ExamModel
+
+Gestisce la logica di Business e i dati. Nel progetto rappresenta il cuore logico dell'applicazione:
+
+- Contiene i dati degli esami.
+- Gestisce le operazioni della CRUD (Create – Read – Delete) attraverso le rispettive funzioni: `add(esame)`, `getAll()`, `remove(id)`.
+- Calcola le statistiche (media aritmetica, media ponderata, proiezione voto di laurea).
+
+*Nota: Inizialmente `ExamModel` utilizzava dati Mock, simulando un backend reale.*
+
+### ExamView
+
+Si occupa principalmente della proiezione grafica.
+Nel progetto:
+
+- Disegna la tabella degli esami.
+- Aggiorna i valori delle statistiche.
+- Intercetta le azioni dell'utente, per esempio il "click".
+- Non conosce il model.
+- Non contiene la logica di business.
+- Espone solo metodi come: `renderTable`, `updateStats`, `bindAddExam`.
+
+### ExamPresenter
+
+È il componente centrale dell'MVP, il suo ruolo è:
+
+- Ricevere eventi dalla View.
+- Chiedere i dati al Model.
+- Aggiornare la View con i risultati.
+
+Nel progetto il Presenter:
+
+- Inizializza l'applicazione.
+- Recupera la lista degli esami dal Model.
+- Aggiorna la tabella e le statistiche.
+- Gestisce l'aggiunta e l'eliminazione degli esami.
+
+### Flusso di funzionamento dell'applicazione
+
+1. L'utente apre la pagina.
+2. Il file `main.js` crea:
+   - `ExamModel`
+   - `ExamView`
+   - `ExamPresenter`
+3. Il Presenter inizializza l'applicazione.
+4. Il Model fornisce i dati.
+5. La View visualizza questi ultimi (i dati).
+6. Ogni iterazione passa dal Presenter.
+
+Questo garantisce un flusso ordinato e prevedibile.
+
+### Conclusione
+
+L'adozione dell'architettura MVP ha permesso di strutturare il progetto in modo ordinato e scalabile, rendendo chiaro il ruolo di ogni componente. Anche in assenza del backend definitivo, l'uso di dati Mock ha consentito di sviluppare e testare il frontend in modo realistico.
+
+---
+
+## 5. Backend: Componenti Core
+
+Il backend è progettato per essere robusto, sicuro e modulare tramite l'uso di pattern di design specifici. I tre componenti fondamentali sono il **Router**, la **Request** e la **Response**, ognuno con un pattern architetturale dedicato.
+
+### 5.1 Componente Router
+
+**Fonte**: `docs/documentazione_router.pdf`
+
+Il componente `Router` è il punto d'ingresso principale dell'applicazione backend. Smista dinamicamente le richieste in entrata verso le specifiche aree applicative (endpoints).
+
+#### Scelte Architetturali
+
+1. **Separazione delle Preoccupazioni**: Il Router si occupa esclusivamente di tradurre un URI in un comando, mantenendosi agnostico sulla logica di business. I singoli endpoints (`Commands`) non conoscono i dettagli del routing.
+2. **Caricamento Route basato su File (`endpoints.txt`)**: Per evitare hardcoding, le associazioni URI-Comando sono definite in testo piano. L'estensibilità (aggiunta di una route) è possibile semplicemente creando il file Comando e aggiungendo una riga di testo, senza toccare il Router.
+3. **Validazione Multi-Livello**: Assicura che una richiesta non prosegua mai se non rispetta le regole base (Route esistente -> Metodo HTTP corretto -> Classe Command definita -> Interfaccia Command implementata correttamente).
+
+#### Design Pattern: Command Pattern
+
+Il cuore del router è strutturato utilizzando il Pattern Command. Questo pattern incapsula e trasforma una richiesta in un oggetto a sé stante ("Command"), disaccoppiando chi invoca l'operazione (il Router) da chi sa come eseguirla (il Receiver / Endpoint).
+**Perchè**: Senza il Pattern Command si finirebbe ad ottenere un immenso blocco `switch-case` instradante. L'adozione del pattern Command consente una modularità pressoché infinita. L'esecuzione dei vari receiver resta pulita e fortemente testabile.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+classDiagram
+    direction LR
+
+    class Router {
+        <<Invoker>>
+        +handleRequest(request): Response
+        +dispatch(routeName, request): Response
+    }
+
+    class CommandInterface {
+        <<Command>>
+        +execute(request): Response
+    }
+
+    class LoginCommand {
+        <<ConcreteCommand>>
+        +execute(request)
+    }
+
+    class ExamsCommand {
+        <<ConcreteCommand>>
+        +execute(request)
+    }
+
+    class ReceiverFunctions {
+        <<Receiver>>
+        +loginEP()
+        +examsEP()
+    }
+
+    Router --> CommandInterface : invoca
+    CommandInterface <|.. LoginCommand
+    CommandInterface <|.. ExamsCommand
+    LoginCommand --> ReceiverFunctions : chiama loginEP()
+    ExamsCommand --> ReceiverFunctions : chiama examsEP()
+```
+
+#### Architettura di Sistema Globale
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+classDiagram
+    class Router
+    class Request
+    class Response
+    class CommandInterface
+  
+    Router --> Request : analizza
+    Router --> CommandInterface : delega
+    CommandInterface --> Response : produce
+```
+
+#### Flusso Completo di Routing (Sequence Diagram)
+
+Una singola richiesta scorre all'interno delle componenti secondo questa sequenza logica.
 
 ```mermaid
 sequenceDiagram
-    participant S as StatsController
-    participant MA as MediaAritmetica
-    participant MP as MediaPonderata
-    participant PREV as MediaPrevisionale
-  
-    Note over S: Caricamento strategie
+    participant Client
+    participant Request
+    participant Router
+    participant Command as LoginCommand
+    participant EPFunction as loginEP()
+    participant ResponseBuilder
+    participant Response
+
+    Client->>Request: HTTP Request (POST /api/login)
+    Request-->>Router: Passa Oggetto Request tipizzato
+
     rect rgba(128, 128, 128, 0.13)
-    Note over S: getStatsData(userId)
-    S->>MA: calcola(esami)
-    MA-->>S: mediaA
-    S->>MP: calcola(esami)
-    MP-->>S: mediaP
-    S->>PREV: calcola(mediaP, cfu, target)
-    PREV-->>S: mediaFutura
+    Note over Router: Routing e Dispatch
+    Router->>Router: getRouteFromUri("/api/login")
+    Router->>Router: dispatch("login", request)
+    Router->>Command: new LoginCommand()
+    Router->>Command: execute(request)
     end
-    Note over S: Consolidamento risultati
+
+    rect rgba(128, 128, 128, 0.13)
+    Note over Command,Response: Esecuzione Command e costruzione Response
+    Command->>EPFunction: chiama loginEP()
+    EPFunction->>ResponseBuilder: new ResponseBuilder()
+    ResponseBuilder-->>EPFunction: Oggetto Builder
+    EPFunction->>ResponseBuilder: withSuccess(true)
+    EPFunction->>ResponseBuilder: build()
+    ResponseBuilder-->>Response: new Response()
+    Response-->>EPFunction: Oggetto Response
+    EPFunction-->>Command: returns Response
+    Command-->>Router: returns Response
+    end
+
+    Router-->>Client: Ritorna JSON Response
 ```
 
-#### Implementazione
+#### Gestione degli Errori nel Router
 
-**Interfaccia Comune** (per strategie base):
+Ogni operazione logica viene controllata con uno schema ad albero. In caso di fallimento in un qualsiasi snodo, il processing viene interrotto per restituire un JSON di errore coerente senza lanciare fatal error applicativi.
 
-**Scopo**: Definire un contratto comune per tutte le strategie di calcolo che operano su array di esami. Questo permette al controller di utilizzare qualsiasi strategia in modo intercambiabile (polimorfismo).
-
-```php
-// src/server/api/strategies/MediaStrategy.php
-interface MediaStrategy {
-    public function calcola(array $esami): float;
-}
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    Req[Richiesta Ricevuta] --> R_Esiste{Route Esiste?}
+    R_Esiste -- No --> R_Err1[Errore: ROUTE_NON_TROVATA]
+    R_Esiste -- Si --> M_Check{Metodo HTTP\nCorretto?}
+  
+    M_Check -- No --> R_Err2[Errore: METODO_NON_CONSENTITO]
+    M_Check -- Si --> C_Esiste{Classe Command\nEsiste?}
+  
+    C_Esiste -- No --> R_Err3[Errore: COMMAND_NON_TROVATO]
+    C_Esiste -- Si --> C_Interf{Istanza \nCommandInterface?}
+  
+    C_Interf -- No --> R_Err4[Errore: COMMAND_NON_VALIDO]
+    C_Interf -- Si --> Exec[Esegui Command]
+  
+    Exec --> Succ{Successo?}
+    Succ -- No --> R_Err5[Errore: ERRORE_DI_ESECUZIONE]
+  
+    R_Err1 --> ErrNode[Risposta di Errore]
+    R_Err2 --> ErrNode
+    R_Err3 --> ErrNode
+    R_Err4 --> ErrNode
+    R_Err5 --> ErrNode
+  
+    ErrNode --> Ret[Invia Risposta JSON]
+    Succ -- Si --> SuccNode[Risposta di Successo] --> Ret
 ```
 
-**Strategia 1: Media Aritmetica**
+---
 
-**Logica**: Calcola la media semplice sommando tutti i voti e dividendo per il numero di esami. Questo è il calcolo più basilare e non tiene conto dei CFU.
+### 5.2 Componente Request
 
-**Scopo**: Fornire una metrica rapida del rendimento generale dello studente, utile per confronti informali ma non per il voto di laurea.
+**Fonte**: `docs/documentazione_request.pdf`
 
-```php
-// src/server/api/strategies/MediaAritmetica.php
-class MediaAritmetica implements MediaStrategy {
-    public function calcola(array $esami): float {
-        if (empty($esami)) return 0;
-  
-        $somma = 0;
-        foreach ($esami as $esame) {
-            $somma += $esame['voto'];
-        }
-  
-        return $somma / count($esami);
-    }
-}
-```
+La classe `Request` rappresenta un wrapper object-oriented per le richieste HTTP. Funge da livello di astrazione per isolare l'applicazione dall'accesso diretto alle variabili superglobali di PHP (`$_SERVER`, `$_POST`, `$_GET`), migliorando sicurezza e testabilità.
 
-**Formula**: `Media = Σ(voti) / N`
+#### Scelte Architetturali e di Sicurezza
 
-**Strategia 2: Media Ponderata**
+L'architettura della classe `Request` è stata progettata con un focus sulla robustezza:
 
-**Logica**: Calcola la media pesata sui CFU. Ogni voto viene moltiplicato per i suoi CFU, poi si somma tutto e si divide per il totale dei CFU. Questa è la media ufficiale usata per il voto di laurea.
+1. **Type Safety e Null Safety**: Tutte le proprietà e i metodi utilizzano dichiarazioni di tipo rigorose. In assenza di valori, i metodi restituiscono `null` o valori di default sicuri, prevenendo *type confusion vulnerabilities*.
+2. **Immutabilità**: Una volta creata, un'istanza `Request` non può essere modificata. Questo previene alterazioni impreviste della richiesta durante il ciclo di vita dell'applicazione.
+3. **Nessun Accesso Diretto alle Superglobali**: La logica di business e il Router interagiscono esclusivamente con l'oggetto `Request`.
+4. **Header Case-Insensitive**: Previene attacchi di injection basati su variazioni del capitalizzazione (es. `CONTENT-TYPE` vs `Content-Type`).
 
-**Scopo**: Fornire la metrica più importante per la carriera accademica, poiché esami con più CFU hanno maggiore impatto sulla media finale.
+#### Design Pattern: Factory Pattern
 
-```php
-// src/server/api/strategies/MediaPonderata.php
-class MediaPonderata implements MediaStrategy {
-    public function calcola(array $esami): float {
-        if (empty($esami)) return 0;
-  
-        $sommaPonderata = 0;
-        $totCFU = 0;
-  
-        foreach ($esami as $esame) {
-            $sommaPonderata += ($esame['voto'] * $esame['cfu']);
-            $totCFU += $esame['cfu'];
-        }
-  
-        return $totCFU > 0 ? $sommaPonderata / $totCFU : 0;
-    }
-}
-```
+Per l'istanziazione, la classe utilizza un approccio basato su *Factory Method* (`createBaseRequest()`).
+**Perchè**: Centralizza la logica di estrazione dei dati crudi dalle superglobali PHP, fornendo un singolo punto in cui avviene l'analisi e la validazione iniziale, e consentendo inoltre di creare istanze "manuali" per finalità di mock e unit testing.
 
-**Formula**: `Media Ponderata = Σ(voto × CFU) / Σ(CFU)`
+#### Flusso di Elaborazione della Richiesta HTTP
 
-**Strategia 3: Media Previsionale (Forecasting)**
-
-**Logica**: Utilizza una formula inversa per calcolare quale media futura è necessaria sui CFU rimanenti per raggiungere un target di laurea (es. 110/110). La formula parte dal target, sottrae il "peso" già accumulato, e divide per i CFU mancanti.
-
-**Scopo**: Permettere allo studente di pianificare strategicamente la propria carriera rispondendo alla domanda: "Che media devo mantenere per laurearmi con 110?"
-
-```php
-// src/server/api/strategies/MediaPrevisionale.php
-class MediaPrevisionale {
-    /**
-     * Calcola la media futura necessaria per raggiungere un target di laurea.
-     * 
-     * Formula Inversa:
-     * TargetMedia = (TargetVotoLaurea × 30) / 110
-     * MediaFutura = (TargetMedia × TotCFU - MediaCorrente × CFUFatti) / CFUMancanti
-     */
-    public function calcola(float $mediaCorrente, int $cfuFatti, int $cfuTotali, int $targetVoto): float {
-        $cfuMancanti = $cfuTotali - $cfuFatti;
-  
-        if ($cfuMancanti <= 0) {
-            return 0; // Corso completato
-        }
-  
-        $targetMedia = ($targetVoto * 30) / 110;
-        $mediaFutura = (($targetMedia * $cfuTotali) - ($mediaCorrente * $cfuFatti)) / $cfuMancanti;
-  
-        return round($mediaFutura, 2);
-    }
-}
-```
-
-**Esempio di Calcolo**:
-
-- Media attuale: 26.86
-- CFU fatti: 120
-- CFU totali corso: 180
-- Target: 110/110
-- **Risultato**: Media futura necessaria = 30.41 (matematicamente impossibile, serve 110L)
-
-**Strategia 4: Distribuzione Voti**
-
-**Logica**: Categorizza ogni voto in fasce predefinite (18-21, 22-24, 25-27, 28-29, 30, 30L) e conta quanti esami rientrano in ciascuna fascia. Gestisce anche il caso speciale della lode.
-
-**Scopo**: Fornire una vista statistica sulla "costanza" del rendimento. Permette di capire se lo studente ha voti concentrati in una fascia o distribuiti uniformemente.
-
-```php
-// src/server/api/strategies/DistribuzioneVotiStrategy.php
-class DistribuzioneVotiStrategy {
-    public function calcola(array $esami): array {
-        $distribuzione = [
-            '18-21' => 0,
-            '22-24' => 0,
-            '25-27' => 0,
-            '28-29' => 0,
-            '30'    => 0,
-            '30L'   => 0
-        ];
-
-        foreach ($esami as $esame) {
-            $voto = intval($esame['voto']);
-            $lode = isset($esame['lode']) && $esame['lode'] == 1;
-
-            if ($voto == 30 && $lode) {
-                $distribuzione['30L']++;
-            } elseif ($voto == 30) {
-                $distribuzione['30']++;
-            } elseif ($voto >= 28) {
-                $distribuzione['28-29']++;
-            } elseif ($voto >= 25) {
-                $distribuzione['25-27']++;
-            } elseif ($voto >= 22) {
-                $distribuzione['22-24']++;
-            } elseif ($voto >= 18) {
-                $distribuzione['18-21']++;
-            }
-        }
-
-        return $distribuzione;
-    }
-}
-```
-
-**Output Esempio**: `{"18-21": 0, "22-24": 3, "25-27": 5, "28-29": 8, "30": 4, "30L": 1}`
-
-**Strategia 5: Trend Temporale**
-
-**Logica**: Ordina gli esami per data cronologica e calcola la media ponderata progressiva dopo ogni esame. Questo crea una "timeline" che mostra come la media è evoluta nel tempo.
-
-**Scopo**: Identificare trend di miglioramento o peggioramento nel rendimento. Utile per capire se lo studente sta migliorando con il tempo o se ci sono stati periodi critici.
-
-```php
-// src/server/api/strategies/TrendMedieStrategy.php
-class TrendMedieStrategy {
-    public function calcola(array $esami): array {
-        // Ordina per data
-        usort($esami, function($a, $b) {
-            return strcmp($a['data'], $b['data']);
-        });
-
-        $trend = [];
-        $sommaPonderata = 0;
-        $totCFU = 0;
-
-        foreach ($esami as $esame) {
-            $voto = $esame['voto'];
-            $cfu = $esame['cfu'];
-  
-            if ($voto < 18) continue; 
-
-            $sommaPonderata += ($voto * $cfu);
-            $totCFU += $cfu;
-
-            $mediaCorrente = $totCFU > 0 ? $sommaPonderata / $totCFU : 0;
-  
-            $trend[] = [
-                'data' => $esame['data'],
-                'esame' => $esame['nome'],
-                'media_progressiva' => round($mediaCorrente, 2)
-            ];
-        }
-
-        return $trend;
-    }
-}
-```
-
-**Output Esempio**:
-
-```json
-[
-  {"data": "2023-01-15", "esame": "Analisi 1", "media_progressiva": 28.0},
-  {"data": "2023-02-20", "esame": "Fisica", "media_progressiva": 27.5},
-  {"data": "2023-06-10", "esame": "Programmazione", "media_progressiva": 27.8}
-]
-```
-
-**Vantaggi del Pattern**:
-
-1. **Open/Closed Principle**: Posso aggiungere nuove strategie senza modificare il controller
-2. **Single Responsibility**: Ogni classe ha una sola ragione per cambiare
-3. **Testabilità**: Posso testare ogni strategia indipendentemente
-
-### 5.2 Repository Pattern (Data Access)
-
-**Problema**: Senza un layer di astrazione, le query SQL sarebbero sparse nei controller, rendendo difficile la manutenzione e il testing.
-
-**Soluzione**: Centralizzare tutte le query in classi Repository.
-
-#### Diagramma di Sequenza - Accesso ai Dati (Isolamento)
-
-Mostra l'isolamento dei dati grazie alla clausola WHERE nel repository:
+Questo diagramma mostra come i dati grezzi provenienti dal web server vengano trasformati in un oggetto tipizzato `Request`.
 
 ```mermaid
 sequenceDiagram
-    participant C as Controller
-    participant R as EsameRepository
-    participant DB as Database
-  
-    C->>R: findByStudent(userId)
-    R->>DB: SELECT ... WHERE studente = :id
-    DB-->>R: Rowset (Solo dati utente)
-    R-->>C: Array Esami
+    participant Client
+    participant ServerWeb
+    participant AmbientePHP
+    participant Factory as Request::createBaseRequest()
+    participant OggettoRequest
+
+    Client->>ServerWeb: POST /api/login?redirect=dashboard
+    ServerWeb->>AmbientePHP: Popola superglobali $_SERVER, $_POST, $_GET
+    AmbientePHP->>Factory: createBaseRequest()
+
+    rect rgba(128, 128, 128, 0.13)
+    Note over Factory: Parsing dati grezzi
+    Factory->>Factory: Leggi $_SERVER['REQUEST_METHOD']
+    Factory->>Factory: Leggi $_SERVER['REQUEST_URI']
+    Factory->>Factory: Analizza getallheaders() (Case-Insensitive)
+    Factory->>Factory: Analizza $_SERVER['QUERY_STRING']
+    Factory->>Factory: Estrae parametri corpo da $_POST
+    Factory->>OggettoRequest: Istanzia new Request(...)
+    end
+
+    OggettoRequest-->>AmbientePHP: Ritorna oggetto tipizzato e protetto
 ```
 
-> [!NOTE]
-> I file `EsameRepository.php` e `UtenteRepository.php` sono stati inizialmente implementati da un collega. Il mio intervento si è focalizzato sull'estensione delle loro funzionalità per supportare i requisiti di sicurezza e multi-utenza.
-
-#### EsameRepository
-
-**Modifiche Apportate**:
-
-- **Aggiunta del metodo `findByStudent(int $studenteId)`**: Questo metodo è fondamentale per la **multi-tenancy**. Mentre l'implementazione originale prevedeva un recupero totale (`all()`), ho aggiunto questa funzione per garantire che ogni utente possa accedere esclusivamente ai propri dati.
-
-```php
-// src/server/repository/EsameRepository.php
-// METODO AGGIUNTO DA ME
-public function findByStudent(int $studenteId): array {
-    return $this->db->fetchAll(
-        "SELECT * FROM applicazione.esame WHERE studente = :id ORDER BY data DESC", 
-        ['id' => $studenteId]
-    );
-}
-```
-
-#### UtenteRepository
-
-**Modifiche Apportate**:
-
-- **Aggiunta del metodo `findByEmail(string $email)`**: Necessario per il modulo di **Autenticazione**. Permette al controller di login di recuperare l'utente corretto per poi procedere alla verifica della password hashata.
-
-```php
-// src/server/repository/UtenteRepository.php
-// METODO AGGIUNTO DA ME
-public function findByEmail(string $email): ?array {
-    return $this->db->fetchOne(
-        'SELECT * FROM applicazione.utente WHERE email = :email',
-        ['email' => $email]
-    );
-}
-```
-
-**Vantaggi**:
-
-- **Centralizzazione**: Tutte le query in un unico posto
-- **Riusabilità**: Posso usare `findByStudent` da qualsiasi controller
-- **Testing**: Posso mockare il repository nei test
-
-### 5.3 Middleware Pattern (Sicurezza)
-
-**Problema**: Duplicazione del codice di controllo sessione in ogni endpoint protetto. Rischio di dimenticare la protezione su nuove API.
-
-**Soluzione**: Creare un componente che intercetta tutte le richieste prima del controller.
-
-#### Diagramma di Sequenza - Intercezione Middleware
-
-Descrive come il middleware protegge l'accesso alle risorse riservate:
+#### Modello del Flusso dei Dati (Data Flow)
 
 ```mermaid
-sequenceDiagram
-    participant R as Router
-    participant M as AuthMiddleware
-    participant C as Controller
-  
-    R->>M: isAuthenticated()
-    Note over M: Controllo $_SESSION['user_id']
-    alt Sessione Valida
-        M-->>C: userId
-    else Sessione Non Valida
-        M-->>R: 401 Unauthorized (Exit)
+%%{init: {"theme": "default"}}%%
+flowchart LR
+    subgraph Input Grezzi
+        Req[Richiesta HTTP]
+        S_SERV[$_SERVER]
+        S_GET[$_GET]
+        S_POST[$_POST]
+        H_HTTP[Header HTTP]
+        Req --> S_SERV
+        Req --> S_GET
+        Req --> S_POST
+        Req --> H_HTTP
+    end
+
+    subgraph Factory Centralizzata
+        Elab[Elaborazione Centralizzata<br>- Analizza QUERY_STRING<br>- Gestisce POST/PUT]
+        S_SERV --> Elab
+        S_GET --> Elab
+        S_POST --> Elab
+        H_HTTP --> Elab
+    end
+
+    subgraph Astrazione
+        costr((Costruttore))
+        interf{Interfaccia Pulita<br>- Metodi Type-Safe<br>- Valori default/Null Safety}
+        Elab --> costr
+        costr --> interf
+    end
+
+    subgraph Business Logic
+        App[Codice Applicazione / Router]
+        interf -- Oggetto Accesso Sicuro --> App
     end
 ```
 
-#### Diagramma di Stato - Ciclo di Vita della Sessione
-
-Il seguente diagramma mostra la struttura logica della sessione utente:
-
-```mermaid
-graph LR
-    %% --- NODI ---
-    START(( ))
-    GUEST("Utente Guest")
-    LOGIN("Verifica Credenziali")
-    SESSION("Sessione Attiva")
-    STATS("Calcolo Statistiche")
-
-    %% --- FLUSSO ---
-    START --> GUEST
-    GUEST -- "POST /login" --> LOGIN
-    LOGIN == "Successo" ==> SESSION
-    SESSION -- "GET /stats" --> STATS
-    STATS -- "JSON" --> SESSION
-    LOGIN -- "Errore" --> GUEST
-    SESSION -- "Logout" --> GUEST
-```
-
-#### Implementazione AuthMiddleware
-
-**Logica**: Controlla se esiste una variabile `$_SESSION['user_id']`. Se non esiste, significa che l'utente non è autenticato, quindi blocca la richiesta con un 401. Se esiste, restituisce l'ID utente al controller.
-
-**Scopo**: Evitare duplicazione del codice di autenticazione in ogni endpoint. Centralizza la logica di sicurezza in un unico punto.
-
-```php
-// src/server/api/middleware/AuthMiddleware.php
-class AuthMiddleware {
-    /**
-     * Verifica se l'utente è autenticato.
-     * Se no, termina la richiesta con 401.
-     * Se sì, restituisce l'ID utente.
-     */
-    public static function isAuthenticated(): int {
-        session_start();
-  
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Non autorizzato']);
-            exit; // Blocca l'esecuzione
-        }
-  
-        return $_SESSION['user_id'];
-    }
-}
-```
-
-**Utilizzo nel Controller**:
-
-```php
-// src/server/api/stats.php
-function statsEP(): void {
-    header('Content-Type: application/json');
-
-    // Prima riga: controllo autenticazione
-    $userId = AuthMiddleware::isAuthenticated();
-  
-    // Se arriviamo qui, l'utente è autenticato
-    $esami = $esameRepo->findByStudent($userId); // Query filtrata
-    // ...
-}
-```
-
-**Vantaggi**:
-
-- **DRY**: Il codice di autenticazione è scritto una sola volta
-- **Sicurezza**: Impossibile dimenticare il controllo
-- **Manutenibilità**: Modifiche alla logica di auth in un solo punto
-
-## 6. Implementazione Dettagliata
-
-### 6.1 Endpoint API Implementati
-
-#### 6.1.1 POST /api/login
-
-**Scopo**: Autenticare un utente e creare una sessione sicura.
-
-**Logica**:
-
-1. Riceve email e password dal client (JSON)
-2. Cerca l'utente nel database tramite `UtenteRepository`
-3. Verifica la password usando `password_verify()` (confronto con hash bcrypt)
-4. Se valido, crea una sessione PHP e salva `user_id` in `$_SESSION`
-5. Rigenera l'ID sessione per prevenire Session Fixation attacks
-
-#### Diagramma di Sequenza - Flusso di Login
-
-Dettaglio dell'interazione durante la creazione della sessione:
+#### Esempio Completo: Flusso di Login tramite Request
 
 ```mermaid
 sequenceDiagram
-    participant C as Client
-    participant L as LoginController
-    participant R as UtenteRepository
-    participant S as Sessione
-  
-    C->>L: POST /login (email, pwd)
-    L->>R: findByEmail(email)
-    R-->>L: utente['password_hash']
-    Note over L: password_verify(pwd, hash)
-    alt Password OK
-        L->>S: session_start()
-        L->>S: set user_id
-        L-->>C: 200 OK + User Info
-    else Errore
-        L-->>C: 401 Unauthorized
+    participant Utente
+    participant Browser
+    participant ServerPHP
+    participant Factory as Request Factory
+    participant Command as Login Command
+    participant Builder as Response Builder
+
+    Utente->>Browser: Compila form login
+    Browser->>ServerPHP: POST /api/login (username/password)
+
+    rect rgba(128, 128, 128, 0.13)
+    Note over Factory: Costruzione Request
+    ServerPHP->>Factory: createBaseRequest()
+    Factory->>Factory: Estrae da $_POST e Header
+    Factory-->>ServerPHP: Restituisce istanza Request
     end
+
+    rect rgba(128, 128, 128, 0.13)
+    Note over Command,Builder: Esecuzione logica e risposta
+    ServerPHP->>Command: Esegue logica passando Request
+    Command->>Command: Estrae credenziali type-safe
+    Command->>Command: Valida/Processa
+    Command->>Builder: build()
+    Builder-->>Command: Restituisce oggetto Response
+    Command-->>ServerPHP: Ritorna JSON
+    end
+
+    ServerPHP-->>Browser: HTTP 200 { "success": true }
 ```
 
-#### Implementazione
+#### Integrazione con il Sistema Router (Command Pattern)
 
-```php
-// src/server/api/login.php
-require_once dirname(__DIR__) . '/config/DatabasePDO.php';
-require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
-require_once dirname(__DIR__) . '/repository/UtenteRepository.php';
+L'oggetto `Request` viene passato al Router, il quale incapsula ciascun endpoint sotto forma di un "Comando".
 
-function loginEP() {
-    header('Content-Type: application/json');
-  
-    $input = json_decode(file_get_contents('php://input'), true);
-    $email = $input['email'] ?? '';
-    $password = $input['password'] ?? '';
-
-    if (empty($email) || empty($password)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing credentials']);
-        return;
-    }
-
-    try {
-        $db = new DatabaseWrapper((new DatabasePDO())->pdo());
-        $utenteRepo = new UtenteRepository($db);
-  
-        $utente = $utenteRepo->findByEmail($email);
-  
-        if (!$utente || !password_verify($password, $utente['password_hash'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Credenziali non valide']);
-            return;
-        }
-
-        // Autenticazione riuscita
-        session_start();
-        session_regenerate_id(true); // Prevenzione Session Fixation
-        $_SESSION['user_id'] = $utente['utente_id'];
-        $_SESSION['email'] = $utente['email'];
-
-        echo json_encode([
-            'success' => true,
-            'user' => [
-                'id' => $utente['utente_id'],
-                'nome' => $utente['nome'],
-                'cognome' => $utente['cognome']
-            ]
-        ]);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Errore del server']);
-    }
-}
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    C[Client HTTP] -->|Invio Dati| R[Richiesta HTTP]
+    R --> OReq["Oggetto Request (Interfaccia type-safe)"]
+    OReq -->|Passato a handleRequest| Router["Router (Pattern Command)"]
+    Router -->|Determina endpoint associato| E["execute(Request)"]
+    E --> Cmd[Command - Endpoint specifico]
+    Cmd -->|Esegue logica di business| Builder[Response Builder]
+    Builder -->|Restituisce Oggetto Response| Json[Risposta JSON al Client]
+    Json --> C
 ```
 
-**Sicurezza Implementata**:
+---
 
-1. **Password Hashing**: Uso `password_verify()` per confrontare hash bcrypt (non salvo password in chiaro)
-2. **Session Regeneration**: `session_regenerate_id(true)` previene Session Fixation attacks
-3. **Input Validation**: Controllo che email e password non siano vuoti
-4. **Error Handling**: Non rivelo se l'errore è email o password errata (prevenzione user enumeration)
+### 5.3 Componente Response
 
-#### 6.1.2 GET /api/stats
+**Fonte**: `docs/documentazione_response.pdf`
 
-**Scopo**: Restituire tutte le statistiche dell'utente autenticato.
+Il componente `Response` gestisce le risposte JSON emesse dalle API verso il client. È stato progettato per centralizzare la creazione delle risposte, assicurando che tutti gli endpoint restituiscano un formato prevedibile, coerente e sicuro.
 
-**Logica**:
+#### Scelte Architetturali e di Sicurezza
 
-1. Verifica autenticazione tramite `AuthMiddleware` (ottiene `userId`)
-2. Recupera gli esami dello studente dal database (query filtrata)
-3. Istanzia tutte e 5 le strategie di calcolo
-4. Esegue i calcoli in sequenza
-5. Costruisce un JSON con tutti i risultati
-6. Gestisce errori con try-catch (500 in caso di eccezioni)
+L'obiettivo principale del componente Response è la consistenza. Le decisioni chiave prese dal punto di vista dell'architettura includono:
 
-```php
-// src/server/api/stats.php
-require_once dirname(__DIR__) . '/config/DatabasePDO.php';
-require_once dirname(__DIR__) . '/config/DatabaseWrapper.php';
-require_once __DIR__ . '/strategies/MediaAritmetica.php';
-require_once __DIR__ . '/strategies/MediaPonderata.php';
-require_once __DIR__ . '/strategies/MediaPrevisionale.php';
-require_once __DIR__ . '/strategies/DistribuzioneVotiStrategy.php';
-require_once __DIR__ . '/strategies/TrendMedieStrategy.php';
-require_once __DIR__ . '/middleware/AuthMiddleware.php';
-require_once dirname(__DIR__) . '/repository/EsameRepository.php';
+1. **Oggetti Immutabili**: La classe `Response` non espone alcun metodo "setter". Una volta creata l'istanza finale, i dati non possono essere manipolati; questo minimizza gli effetti collaterali e i bug imprevisti nel momento dell'emissione dell'output.
+2. **Standardizzazione del JSON**: Ogni risposta ha necessariamente i campi `success`, `message`, `endpoint` e `auth`. Codici di errore e payload addizionali (`data`) sono opzionali, garantendo che i client sappiano sempre cosa aspettarsi.
+3. **Validazione Integrata**: Controlli rigorosi prevengono la creazione della Response se i dati critici (es. `endpoint`) sono mancanti.
+4. **Fallback per Errori JSON**: In caso di fallimento della codifica JSON (ad es. per encoding non valido o riferimenti circolari), il componente intercetta l'errore e fornisce una risposta JSON di errore predefinita anziché generare output malformato.
+5. **Incapsulamento in un Singolo File**: Entrambe le classi (`Response` e `ResponseBuilder`) risiedono nello stesso file per mantenere l'integrità del pattern ed evitare problemi di visibilità in PHP.
 
-function statsEP(): void {
-    header('Content-Type: application/json');
+#### Design Pattern: Builder Pattern
 
-    $userId = AuthMiddleware::isAuthenticated();
+La creazione della `Response` segue il Pattern Builder, fondamentale a causa del numero di attributi opzionali e obbligatori.
+**Perchè**: Invece di avere un costruttore monolitico estremamente verboso, la separazione in una classe `ResponseBuilder` permette una creazione "step-by-step" con interfacce fluenti (chaining dei metodi come `->withSuccess()->withData()`). Ciò massimizza la leggibilità, accentra la logica di validazione nel metodo finale `build()` e mantiene la classe `Response` totalmente immutabile, senza alcun setter.
 
-    try {
-        $data = getStatsData($userId);
-        echo json_encode($data);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal Server Error']);
-    }
-}
-
-/**
- * Funzione di supporto per il calcolo dei dati statistici.
- * Isola la logica di business per favorire la compatibilità con ResponseInterface.
- */
-function getStatsData(int $userId): array {
-    $db = new DatabaseWrapper((new DatabasePDO())->pdo());
-    $esameRepo = new EsameRepository($db);
-    $esami = $esameRepo->findByStudent($userId);
-
-    // Istanziazione strategie
-    $distribuzioneStrategy = new DistribuzioneVotiStrategy();
-    $trendStrategy = new TrendMedieStrategy();
-    $mediaAritmeticaStrategy = new MediaAritmetica();
-    $mediaPonderataStrategy = new MediaPonderata();
-    $mediaPrevisionaleStrategy = new MediaPrevisionale();
-
-    // Calcoli
-    $mediaA = $mediaAritmeticaStrategy->calcola($esami);
-    $mediaP = $mediaPonderataStrategy->calcola($esami);
-    $distribuzione = $distribuzioneStrategy->calcola($esami);
-    $trend = $trendStrategy->calcola($esami);
-  
-    $totCFU = 0;
-    foreach ($esami as $e) {
-        $totCFU += $e['cfu'];
+```mermaid
+%%{init: {"theme": "default"}}%%
+classDiagram
+    direction LR
+    class ResponseBuilder {
+        - bool success
+        - string message
+        - string error_code
+        - string endpoint
+        - bool auth
+        - array data
+        + withSuccess() ResponseBuilder
+        + withMessage() ResponseBuilder
+        + withErrorCode() ResponseBuilder
+        + withEndpoint() ResponseBuilder
+        + withAuth() ResponseBuilder
+        + withData() ResponseBuilder
+        + build() Response
     }
 
-    $proiezione = ($mediaP * 110) / 30;
-    $cfuTotaliCorso = 180; 
-    $mediaFutura = $mediaPrevisionaleStrategy->calcola($mediaP, $totCFU, $cfuTotaliCorso, 110);
+    class Response {
+        - bool success
+        - string message
+        + getErrorCode() string
+        + getEndpoint() string
+        + requiresAuth() bool
+        + getData() array
+        + toJson() string
+    }
 
-    return [
-        'mediaA' => round($mediaA, 2),
-        'mediaP' => round($mediaP, 2),
-        'proiezione' => round($proiezione, 2),
-        'cfuTotali' => $totCFU,
-        'previsione110' => $mediaFutura,
-        'distribuzioneVoti' => $distribuzione,
-        'trendMedia' => $trend
-    ];
-}
+    ResponseBuilder --> "crea (build)" Response
 ```
 
-**Esempio di Risposta JSON**:
+#### Flusso di Gestione degli Errori e Costruzione (Data Flow)
+
+Questo diagramma mostra il processo completo che il Builder esegue per istanziare e produrre l'output finale, includendo tutti i passaggi di validazione e la fallback di codifica.
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+flowchart TD
+    Start((Start)) --> Call[Client chiama metodi builder]
+    Call --> Builder[Builder imposta proprieta in stato intermedio]
+    Builder --> Endpoint{Endpoint vuoto?}
+
+    Endpoint -- Si --> Exc[Eccezione: Endpoint richiesto dalla Response]
+    Exc --> StopEcc((Stop))
+
+    Endpoint -- No --> Crea[Crea oggetto immutabile Response]
+    Crea --> Conv["Converti in JSON tramite toJson()"]
+    Conv --> JsonSuccess{Codifica JSON riuscita?}
+
+    JsonSuccess -- Si --> JsonStr[Ritorna stringa JSON valida]
+    JsonStr --> StopOk((Stop))
+
+    JsonSuccess -- No --> Fallback[Ritorna JSON di errore con success false]
+    Fallback --> StopErr((Stop))
+```
+
+---
+
+## 6. Persistenza: Componente Database
+
+**Fonte**: `docs/Componente_database.pdf`
+
+Il database rappresenta il livello di persistenza dell'applicazione "Gestione Esami" ed è responsabile della gestione dei dati relativi agli utenti, corsi, esami, insegnamenti e carriere. Implementato su **PostgreSQL 13**.
+
+### Analisi dei Requisiti e Modello Concettuale (ER)
+
+#### Entità Principali
+
+- **Utente**: l'utente dell'applicazione.
+- **Carriera**: la carriera dello studente.
+- **Corso**: corso di laurea a cui un utente è associato.
+- **Insegnamento**: un insegnamento previsto all'interno di un corso.
+- **Esame**: un esame sostenuto (o registrato) da un utente per uno specifico insegnamento.
+
+#### Schema Entity-Relationship (ER)
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+erDiagram
+    utente ||--o{ carriera : "ha"
+    utente {
+        int utente_id PK
+        string nome
+        string cognome
+        date data_di_nascita
+        string email
+        string password
+    }
+
+    carriera }o--|| corso : "appartiene a"
+    carriera {
+        int carriera_id PK
+        int studente FK
+        int corso FK
+        string stato
+        date data_inizio
+        date data_fine
+    }
+
+    corso ||--o{ insegnamento : "contiene"
+    corso {
+        int corso_id PK
+        string nome
+        int n_insegnamenti
+        string tipo
+        int base_laurea
+        int scala_voto
+        int cfu_totali
+    }
+
+    insegnamento ||--o{ esame : "ha"
+    insegnamento {
+        int insegnamento_id PK
+        int corso FK
+        string nome
+        int cfu
+        int anno
+        bool obbligatorio
+    }
+
+    esame {
+        int esame_id PK
+        int insegnamento FK
+        int voto
+        int cfu
+        bool lode
+        date data_esame
+    }
+```
+
+### Vincoli e Integrità dei Dati
+
+- **Integrità di entità**: Chiavi primarie su tutte le tabelle.
+- **Integrità referenziale**: Relazioni tramite `FOREIGN KEY` rigide.
+- **Unicità e Dominio**: L'email dell'utente è unica (`UNIQUE`), i voti ecc. sono soggetti a limitazioni semantiche (`CHECK`).
+
+### Repository Pattern
+
+L'accesso al DB dal Backend avviene unicamente tramite il Repository Pattern (es. `UtenteRepository`, `CarrieraRepository`, ecc.), separando chiaramente la business logic dalle query SQL e prevenendo vulnerabilità SQL Injection usando prepared statements.
+
+### Diagramma di Attività: Inserimento Nuovo Utente
+
+Flusso di comunicazione dal client al database per la registrazione.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Form: L'Utente compila il form
+    state Frontend {
+        Form --> Validazione_Client: Validazione lato client
+        Validazione_Client --> Invio_Dati: Validazione OK
+        Validazione_Client --> Mostra_Errore: Errore
+        Mostra_Errore --> [*]
+    }
+    state Backend {
+        Invio_Dati --> Ricezione
+        Ricezione --> Validazione_Server
+        Validazione_Server --> Errore_400: Errore
+        Errore_400 --> [*]
+        Validazione_Server --> Crea_Utente: OK
+        Crea_Utente --> Hash_PWD: Hash password
+    }
+    state Repository {
+        Hash_PWD --> Prepara_SQL: Prepara query SQL
+        Prepara_SQL --> Esegui_Query
+    }
+    state Database {
+        Esegui_Query --> Verifica_Vincoli
+        Verifica_Vincoli --> Rollback: Violazione
+        Rollback --> Fail
+        Verifica_Vincoli --> Insert: Rispettati
+        Insert --> Success
+    }
+    state Risposta {
+        Success --> Res_201: OK (201)
+        Fail --> Res_500: Errore (500)
+        Res_201 --> Invia
+        Res_500 --> Invia
+        Invia --> [*]
+    }
+```
+
+### Inizializzazione Database
+
+Il database è orchestrato via Docker Compose. Al primo avvio, se il volume persistente non è inizializzato, PostgreSQL esegue automaticamente `01_init.sql` (struttura e vincoli) e `02_seed.sql` (dati fittizi). Questo implementa il pattern **Factory Method**.
+
+### Modifiche al Database
+
+È stata aggiunta la ForeignKey `studente` alla tabella `esame` riferita a `utente(utente_id)` per implementare il partizionamento dei dati (multi-tenancy) e garantire l'integrità referenziale automatica tramite `ON DELETE CASCADE`.
+
+### Test
+
+Suite di test manuali implementati in PHP per verificare connessioni e Repository, non usando direttamente query lato Frontend/Backend Controller.
+
+---
+
+## 7. Livello API e Contratti (REST)
+
+**Fonte**: `docs/Contratto API REST – Gestione Esami.pdf`
+
+Il documento definisce il contratto di interfaccia REST tra Frontend e Backend (versione 1.0) garantendo un'integrazione chiara tramite formato JSON. Il backend espone servizi tramite API REST, seguendo una convenzione di formattazione JSON sia per l'input (richieste del client) che per l'output (risposte del server gestite dalla classe `Response`).
+
+### Configurazione Generale
+
+- **Base URL**: `http://localhost:8080/api`
+- **Formato dati**: `application/json`
+- **Autenticazione**: JWT tramite HTTP Header (`Authorization: Bearer <token_jwt>`). Richiesta obbligatoriamente per tutte le rotte eccetto Login e Register.
+
+### Standardizzazione della Risposta (Response Envelope)
+
+Ogni risposta mandata al client condivide una struttura comune, per facilitare il parsing globale nel frontend (es. intercettando globalmente un token scaduto o un fallimento):
 
 ```json
 {
-  "mediaA": 27.33,
-  "mediaP": 26.86,
-  "proiezione": 98.48,
-  "cfuTotali": 120,
-  "previsione110": 30.41,
-  "distribuzioneVoti": {
-    "18-21": 0,
-    "22-24": 3,
-    "25-27": 5,
-    "28-29": 8,
-    "30": 4,
-    "30L": 1
-  },
-  "trendMedia": [
-    {"data": "2023-01-15", "esame": "Analisi 1", "media_progressiva": 28.0},
-    {"data": "2023-02-20", "esame": "Fisica", "media_progressiva": 27.5}
-  ]
+  "success": true,
+  "endpoint": "/api/esami",
+  "auth": true,
+  "message": "Operazione completata con successo",
+  "data": { ... }
 }
 ```
 
-#### Diagramma di Sequenza - Flusso Completo API Statistiche
+La standardizzazione della response JSON per errori include sempre:
 
-Il seguente diagramma mostra il flusso completo di una richiesta all'endpoint `/api/stats`, includendo autenticazione, accesso al database, esecuzione delle strategie e gestione degli errori:
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant R as Router
-    participant M as AuthMiddleware
-    participant S as StatsController
-    participant Repo as EsameRepository
-    participant DB as Database
-    participant Strat as Strategies
-
-    C->>R: GET /api/stats
-    R->>M: isAuthenticated()
-  
-    alt Session Valid
-        M-->>S: userId
-        rect rgba(128, 128, 128, 0.13)
-        Note over S: getStatsData(userId)
-        S->>Repo: findByStudent(userId)
-        Repo->>DB: SELECT * FROM esame WHERE studente = :id
-        DB-->>Repo: ResultSet
-        Repo-->>S: ArrayEsami
-  
-        S->>Strat: MediaAritmetica.calcola()
-        Strat-->>S: float
-        S->>Strat: MediaPonderata.calcola()
-        Strat-->>S: float
-        S->>Strat: MediaPrevisionale.calcola()
-        Strat-->>S: float
-        S->>Strat: DistribuzioneVoti.calcola()
-        Strat-->>S: array
-        S->>Strat: TrendMedie.calcola()
-        Strat-->>S: array
-        end
-  
-        S-->>C: 200 OK + JSON Stats
-    else Session Invalid
-        M-->>C: 401 Unauthorized
-    else Database Error
-        Repo-->>S: Exception
-        S-->>C: 500 Internal Server Error
-    end
-```
-
-**Punti Chiave del Flusso**:
-
-1. Il Middleware intercetta la richiesta prima del controller
-2. La query al database è sempre filtrata per `userId` (sicurezza)
-3. Tutte e 5 le strategie vengono eseguite in sequenza
-4. Gestione di 3 scenari: successo, autenticazione fallita, errore database
-
-#### 6.1.3 POST /api/logout
-
-**Scopo**: Distruggere la sessione utente in modo sicuro.
-
-**Logica**:
-
-1. Avvia la sessione per accedere ai dati
-2. Svuota l'array `$_SESSION`
-3. Elimina il cookie di sessione dal browser del client
-4. Distrugge la sessione lato server con `session_destroy()`
-
-Questo garantisce che non rimangano tracce della sessione né lato client né lato server.
-
-```php
-// src/server/api/logout.php
-function logoutEP() {
-    header('Content-Type: application/json');
-  
-    session_start();
-    $_SESSION = array(); // Svuota tutte le variabili di sessione
-  
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-  
-    session_destroy();
-  
-    echo json_encode(['success' => true]);
+```json
+{
+  "success": false,
+  "error_code": "...",
+  "message": "..."
 }
 ```
 
-**Sicurezza**: Distruggo sia la sessione server-side che il cookie client-side.
+*Nota: Le date seguono lo standard ISO 8601.*
 
-### 6.2 Registrazione Endpoint
+### Endpoints Principali Definiti
 
-Ho aggiunto i miei endpoint al file di configurazione del Router:
+1. **Autenticazione**:
 
-```
-// src/server/api/endpoints.txt
-login POST loginEP
-logout POST logoutEP
-stats GET statsEP
-```
+   - `POST /api/login`: Validazione credenziali (email, password). Autentica un utente restituendo un token JWT e i dati base (id, nome, cognome).
+   - `POST /api/register`: Creazione account con hashing password (`password_hash`). Registra un nuovo studente nel sistema. Restituisce un 201 Created.
+   - `GET /api/logout`: Chiusura sessione.
+   - `GET /api/session`: Restituisce lo stato attuale dell'autenticazione.
+2. **Gestione Esami (CRUD)**:
 
-Il Router (sviluppato da altri) legge questo file e mappa automaticamente le richieste.
+   - `GET /api/esami`: Ottiene l'elenco degli esami per l'utente loggato (restituisce materia, voto, lode, cfu, data).
+   - `POST /api/esami`: Aggiunge un nuovo esame (con validazione CFU, Mese/Anno).
+   - `PUT /api/esami/{id}`: Modifica un esame esistente posseduto.
+   - `DELETE /api/esami/{id}`: Elimina un esame (solo dell'utente attivo).
+3. **Statistiche & Reporting**:
 
-## 7. Modifiche al Database
+   - `GET /api/stats`: Calcola la media (ponderata, aritmetica, previsionale) in tempo reale applicando i *Strategy Patterns* sulle righe filtrate. Il server restituisce calcoli basati su una o più Strategy (media aritmetica, media ponderata, cfu totali, esami sostenuti, proiezione voto di laurea).
 
-### 7.1 Problema Iniziale
+---
 
-Lo schema database originale non supportava la multi-utenza. La tabella `esame` non aveva alcuna relazione con `utente`, rendendo impossibile filtrare gli esami per studente.
+## 8. Modulo Statistiche e Sicurezza
 
-### 7.2 Soluzione Implementata
+**Fonte**: `docs/Documentazione_statistiche_sicurezza.pdf`
 
-**Logica**: Aggiunta di una colonna `studente` che referenzia la tabella `utente`. Questo crea una relazione 1-to-N (un utente ha molti esami).
+Questo modulo copre l'analisi dettagliata dei moduli Statistiche (Analytics) e Sicurezza (Auth) del sistema "Gestione Esami". Descrive i requisiti funzionali, l'architettura a 3 layer, i design pattern e il processo iterativo di sviluppo.
 
-**Scopo**: Abilitare la multi-utenza permettendo di filtrare gli esami per studente. Senza questa modifica, tutti gli esami sarebbero visibili a tutti.
+### Requisiti Funzionali
 
-Ho modificato lo schema aggiungendo una Foreign Key:
+- **Statistiche**: Calcolo medie (aritmetica e ponderata), proiezioni e forecasting (voto di laurea), analisi avanzate (distribuzione voti, trend temporale).
+- **Sicurezza**: Autenticazione (login/logout tramite JWT), multi-tenancy e isolamento dati (ogni utente vede solo i propri esami).
 
-```sql
--- src/sql/init.sql (modifica da me apportata)
-ALTER TABLE "applicazione"."esame" 
-ADD COLUMN "studente" INTEGER NOT NULL 
-DEFAULT 1 
-REFERENCES "applicazione"."utente"("utente_id") 
-ON DELETE CASCADE;
-```
+### Requisiti Non Funzionali
 
-**Spiegazione**:
+- Performance rapide (< 200ms per API statistiche).
+- Sicurezza con password hashate via bcrypt.
+- Manutenibilità (Open/Closed Principle) e Testabilità.
 
-- `studente INTEGER`: Nuova colonna che referenzia l'ID utente
-- `NOT NULL`: Ogni esame deve appartenere a uno studente
-- `DEFAULT 1`: Per compatibilità con dati esistenti durante la migrazione
-- `REFERENCES "applicazione"."utente"("utente_id")`: Foreign Key constraint
-- `ON DELETE CASCADE`: Se elimino uno studente, elimino anche i suoi esami (integrità referenziale)
+### Design Pattern: Strategy Pattern (Statistiche)
 
-### 7.3 Schema Finale (Estratto Rilevante)
-
-```sql
--- Tabella utente (esistente, non modificata da me)
-CREATE TABLE "applicazione"."utente" (
-    "utente_id" SERIAL PRIMARY KEY,
-    "nome" VARCHAR(50) NOT NULL,
-    "cognome" VARCHAR(50) NOT NULL,
-    "email" VARCHAR(100) UNIQUE NOT NULL,
-    "password_hash" VARCHAR(255) NOT NULL
-);
-
--- Tabella esame (modificata da me con aggiunta colonna studente)
-CREATE TABLE "applicazione"."esame" (
-    "esame_id" SERIAL PRIMARY KEY,
-    "corso" INTEGER NOT NULL,
-    "voto" INTEGER NOT NULL CHECK (voto >= 18 AND voto <= 30),
-    "cfu" INTEGER NOT NULL,
-    "data" DATE NOT NULL,
-    "lode" BOOLEAN DEFAULT FALSE,
-    "studente" INTEGER NOT NULL REFERENCES "applicazione"."utente"("utente_id") ON DELETE CASCADE
-);
-```
-
-**Impatto della Modifica**:
-
-- Ora posso eseguire query filtrate: `SELECT * FROM esame WHERE studente = :userId`
-- L'isolamento dei dati è garantito a livello di database
-- Integrità referenziale automatica
-
-## 8. Testing e Verifica
-
-### 8.1 Unit Testing
-
-Ho implementato unit test per verificare la correttezza di tutte le strategie di calcolo.
-
-```php
-// src/server/test/unit/StrategiesTest.php
-<?php
-require_once dirname(dirname(__DIR__)) . '/api/strategies/MediaAritmetica.php';
-require_once dirname(dirname(__DIR__)) . '/api/strategies/MediaPonderata.php';
-require_once dirname(dirname(__DIR__)) . '/api/strategies/MediaPrevisionale.php';
-require_once dirname(dirname(__DIR__)) . '/api/strategies/DistribuzioneVotiStrategy.php';
-require_once dirname(dirname(__DIR__)) . '/api/strategies/TrendMedieStrategy.php';
-
-function assertEqual($expected, $actual, $message) {
-    if (abs($expected - $actual) < 0.01) {
-        echo "PASS: $message\n";
-    } else {
-        echo "FAIL: $message (Atteso: $expected, Ottenuto: $actual)\n";
-    }
-}
-
-echo "Esecuzione Unit Test delle Strategie...\n\n";
-
-// Setup Data
-$esami = [
-    ['voto' => 30, 'cfu' => 6],
-    ['voto' => 24, 'cfu' => 9],
-    ['voto' => 28, 'cfu' => 6]
-];
-
-// Test Media Aritmetica: (30+24+28)/3 = 27.33
-$stratA = new MediaAritmetica();
-$resA = $stratA->calcola($esami);
-assertEqual(27.33, $resA, "La Media Aritmetica dovrebbe essere ~27.33");
-
-// Test Media Ponderata: (30*6 + 24*9 + 28*6) / (6+9+6) = 564/21 = 26.86
-$stratP = new MediaPonderata();
-$resP = $stratP->calcola($esami);
-assertEqual(26.86, $resP, "La Media Ponderata dovrebbe essere ~26.86");
-
-// Test Media Previsionale
-$stratPrev = new MediaPrevisionale();
-$resPrev = $stratPrev->calcola(26.86, 21, 180, 110);
-assertEqual(30.41, $resPrev, "La previsione per il 110 dovrebbe essere ~30.41");
-
-// Test Distribuzione Voti
-$stratDist = new DistribuzioneVotiStrategy();
-$resDist = $stratDist->calcola($esami);
-assertEqual(1, $resDist['28-29'], "Dovrebbe esserci 1 esame nella fascia 28-29");
-assertEqual(1, $resDist['22-24'], "Dovrebbe esserci 1 esame nella fascia 22-24");
-assertEqual(1, $resDist['30'], "Dovrebbe esserci 1 esame con voto 30");
-
-// Test Trend
-$esamiTrend = [
-    ['voto' => 24, 'cfu' => 6, 'data' => '2023-01-01', 'nome' => 'A'],
-    ['voto' => 28, 'cfu' => 6, 'data' => '2023-06-01', 'nome' => 'B']
-];
-$stratTrend = new TrendMedieStrategy();
-$resTrend = $stratTrend->calcola($esamiTrend);
-
-assertEqual(24.0, $resTrend[0]['media_progressiva'], "La media del primo punto del trend dovrebbe essere 24");
-assertEqual(26.0, $resTrend[1]['media_progressiva'], "La media del secondo punto del trend dovrebbe essere 26");
-
-echo "\nTest Completati.\n";
-```
-
-### 8.2 Esecuzione Test
-
-```bash
-$ php src/server/test/unit/StrategiesTest.php
-Esecuzione Unit Test delle Strategie...
-
-PASS: La Media Aritmetica dovrebbe essere ~27.33
-PASS: La Media Ponderata dovrebbe essere ~26.86
-PASS: La previsione per il 110 dovrebbe essere ~30.41
-PASS: Dovrebbe esserci 1 esame nella fascia 28-29
-PASS: Dovrebbe esserci 1 esame nella fascia 22-24
-PASS: Dovrebbe esserci 1 esame con voto 30
-PASS: La media del primo punto del trend dovrebbe essere 24
-PASS: La media del secondo punto del trend dovrebbe essere 26
-
-Test Completati.
-```
-
-**Tutti i test passano**, confermando la correttezza degli algoritmi.
-
-### 8.3 Verifica Sintattica
-
-```bash
-$ php -l src/server/api/stats.php
-No syntax errors detected in src/server/api/stats.php
-
-$ php -l src/server/api/login.php
-No syntax errors detected in src/server/api/login.php
-
-$ php -l src/server/repository/EsameRepository.php
-No syntax errors detected in src/server/repository/EsameRepository.php
-
-$ php -l src/server/repository/UtenteRepository.php
-No syntax errors detected in src/server/repository/UtenteRepository.php
-```
-
-## 9. Conclusioni
-
-### 9.1 Tecnologie Utilizzate
-
-- **Backend**: PHP 8.0, PDO, Sessions
-- **Database**: PostgreSQL 13
-- **Testing**: PHP Unit Testing (custom)
-- **Deployment**: Docker Compose
-
-### 9.2 Riepilogo Contributi
-
-**File Creati**:
-
-- `src/server/api/stats.php`
-- `src/server/api/login.php`
-- `src/server/api/logout.php`
-- `src/server/api/middleware/AuthMiddleware.php`
-- `src/server/api/strategies/MediaAritmetica.php`
-- `src/server/api/strategies/MediaPonderata.php`
-- `src/server/api/strategies/MediaPrevisionale.php`
-- `src/server/api/strategies/DistribuzioneVotiStrategy.php`
-- `src/server/api/strategies/TrendMedieStrategy.php`
-- `src/server/test/unit/StrategiesTest.php`
-
-**File Modificati**:
-
-- `src/sql/init.sql` (aggiunta colonna `studente`)
-- `src/server/api/endpoints.txt` (registrazione endpoint)
-- `src/server/EsameRepository.php`  (Esteso con filtro per studente)
-- `src/server/UtenteRepository.php`  (Esteso con ricerca per email)
-
-**Design Pattern Applicati**:
-
-- Strategy Pattern (5 strategie)
-- Repository Pattern (2 repository)
-- Middleware Pattern (1 middleware)
-
-### 9.3 Riepilogo Diagrammi UML
-
-Di seguito vengono riportati tutti i diagrammi realizzati per la modellazione del sistema, raccolti per una visione d'insieme:
-
-#### Diagramma di Componenti - Architettura dei Componenti
+Incapsula ogni algoritmo di calcolo in una classe dedicata, facilitando l'estensione senza modificare il controller.
 
 ```mermaid
-graph TD
-    %% Nodo Router
-    ROUTER("Router / Front Controller")
-
-    %% Layer Presentazione
-    subgraph PresentationLayer [Presentation Layer]
-        STATS("StatsController")
-        LOGIN("LoginController")
-        LOGOUT("LogoutController")
-    end
-
-    %% Layer Logica
-    subgraph BusinessLayer [Business Logic Layer]
-        AUTH("AuthMiddleware")
-        STRAT("StatisticsStrategies")
-    end
-
-    %% Layer Dati
-    subgraph DataLayer [Data Access Layer]
-        REPO_E("EsameRepository")
-        REPO_U("UtenteRepository")
-    end
-
-    %% Infrastruttura
-    subgraph InfrastructureLayer [Infrastruttura]
-        DB_WRAP("DatabaseWrapper")
-        DB[("PostgreSQL")]
-    end
-
-    %% Relazioni
-    ROUTER --> STATS
-    ROUTER --> LOGIN
-    ROUTER --> LOGOUT
-
-    STATS --> AUTH
-    STATS --> STRAT
-    STATS --> REPO_E
-
-    LOGIN --> REPO_U
-  
-    REPO_E --> DB_WRAP
-    REPO_U --> DB_WRAP
-    DB_WRAP --> DB
-```
-
-#### Diagramma di Classi - Struttura Strategy Pattern
-
-```mermaid
+%%{init: {"theme": "default"}}%%
 classDiagram
     class StatsController {
         +statsEP()
@@ -1311,7 +1030,15 @@ classDiagram
     }
 
     class MediaStrategy {
-        <<Interface>>
+        <<interface>>
+        +calcola(esami)
+    }
+  
+    class DistribuzioneVotiStrategy {
+        +calcola(esami)
+    }
+  
+    class TrendMedieStrategy {
         +calcola(esami)
     }
 
@@ -1324,167 +1051,151 @@ classDiagram
     }
 
     class MediaPrevisionale {
-        +calcola(media cfu target)
-    }
-
-    class DistribuzioneVotiStrategy {
-        +calcola(esami)
-    }
-
-    class TrendMedieStrategy {
-        +calcola(esami)
+        +calcola(mediaCorrente, cfuFatti, cfuTotali, targetVoto)
     }
 
     StatsController --> MediaStrategy
     StatsController --> DistribuzioneVotiStrategy
     StatsController --> TrendMedieStrategy
-
-    MediaStrategy <|.. MediaAritmetica
-    MediaStrategy <|.. MediaPonderata
-    MediaStrategy <|.. MediaPrevisionale
+    MediaStrategy <|-- MediaAritmetica
+    MediaStrategy <|-- MediaPonderata
+    MediaStrategy <|-- MediaPrevisionale
 ```
 
-#### Diagramma di Stato - Ciclo di Vita della Sessione
+### Design Pattern: Repository Pattern (Data Access)
+
+Centralizzazione di tutte le query in Repository dedicate (es. `EsameRepository`, `UtenteRepository`), permettendo di incapsulare l'isolamento dei dati.
 
 ```mermaid
-graph LR
-    %% --- NODI ---
-    START(( ))
-    GUEST("Utente Guest")
-    LOGIN("Verifica Credenziali")
-    SESSION("Sessione Attiva")
-    STATS("Calcolo Statistiche")
-
-    %% --- FLUSSO ---
-    START --> GUEST
-    GUEST -- "POST /login" --> LOGIN
-    LOGIN == "Successo" ==> SESSION
-    SESSION -- "GET /stats" --> STATS
-    STATS -- "JSON" --> SESSION
-    LOGIN -- "Errore" --> GUEST
-    SESSION -- "Logout" --> GUEST
-```
-
-#### Diagramma di Sequenza - Flusso Completo API Statistiche
-
-```mermaid
+%%{init: {"theme": "default"}}%%
 sequenceDiagram
-    participant C as Client
-    participant R as Router
-    participant M as AuthMiddleware
-    participant S as StatsController
-    participant Repo as EsameRepository
-    participant DB as Database
-    participant Strat as Strategies
+    participant Controller
+    participant EsameRepository
+    participant Database
 
-    C->>R: GET /api/stats
-    R->>M: isAuthenticated()
-  
-    alt Session Valid
-        M-->>S: userId
-        rect rgba(128, 128, 128, 0.13)
-        Note over S: getStatsData(userId)
-        S->>Repo: findByStudent(userId)
-        Repo->>DB: SELECT * FROM esame WHERE studente = :id
-        DB-->>Repo: ResultSet
-        Repo-->>S: ArrayEsami
-  
-        S->>Strat: MediaAritmetica.calcola()
-        Strat-->>S: float
-        S->>Strat: MediaPonderata.calcola()
-        Strat-->>S: float
-        S->>Strat: MediaPrevisionale.calcola()
-        Strat-->>S: float
-        S->>Strat: DistribuzioneVoti.calcola()
-        Strat-->>S: array
-        S->>Strat: TrendMedie.calcola()
-        Strat-->>S: array
-        end
-  
-        S-->>C: 200 OK + JSON Stats
-    else Session Invalid
-        M-->>C: 401 Unauthorized
-    else Database Error
-        Repo-->>S: Exception
-        S-->>C: 500 Internal Server Error
-    end
+    Controller->>EsameRepository: findByStudent(userId)
+    EsameRepository->>Database: SELECT ... WHERE studente = :id
+    Database-->>EsameRepository: Rowset (Solo dati utente)
+    EsameRepository-->>Controller: Array Esami
 ```
 
-#### Altri Diagrammi di Sequenza
+### Design Pattern: Middleware Pattern (Sicurezza)
 
-- Visualizza Dettagli (Login, Middleware, Data Access, Strategie)
-
-**Diagramma di Sequenza - Flusso di Login**
+Crea un componente che intercetta tutte le richieste per convalidare l'autenticazione prima del controller.
 
 ```mermaid
+%%{init: {"theme": "default"}}%%
 sequenceDiagram
-    participant C as Client
-    participant L as LoginController
-    participant R as UtenteRepository
-    participant S as Sessione
-  
-    C->>L: POST /login (email, pwd)
-    L->>R: findByEmail(email)
-    R-->>L: utente['password_hash']
-    Note over L: password_verify(pwd, hash)
-    alt Password OK
-        L->>S: session_start()
-        L->>S: set user_id
-        L-->>C: 200 OK + User Info
-    else Errore
-        L-->>C: 401 Unauthorized
-    end
-```
+    participant Router
+    participant AuthMiddleware
+    participant Controller
 
-**Diagramma di Sequenza - Intercezione Middleware**
-
-```mermaid
-sequenceDiagram
-    participant R as Router
-    participant M as AuthMiddleware
-    participant C as Controller
-  
-    R->>M: isAuthenticated()
-    Note over M: Controllo $_SESSION['user_id']
+    Router->>AuthMiddleware: isAuthenticated()
+    Note over AuthMiddleware: Controllo $_SESSION['user_id']
     alt Sessione Valida
-        M-->>C: userId
+        AuthMiddleware-->>Controller: userId
     else Sessione Non Valida
-        M-->>R: 401 Unauthorized (Exit)
+        AuthMiddleware-->>Router: 401 Unauthorized (Exit)
     end
 ```
 
-**Diagramma di Sequenza - Accesso ai Dati (Isolamento)**
+### Flusso di Login
 
 ```mermaid
+%%{init: {"theme": "default"}}%%
 sequenceDiagram
-    participant C as Controller
-    participant R as EsameRepository
-    participant DB as Database
-  
-    C->>R: findByStudent(userId)
-    R->>DB: SELECT ... WHERE studente = :id
-    DB-->>R: Rowset (Solo dati utente)
-    R-->>C: Array Esami
-```
+    participant Client
+    participant LoginController
+    participant UtenteRepository
+    participant Sessione
 
-**Diagramma di Sequenza - Esecuzione Strategie Statistiche**
-
-```mermaid
-sequenceDiagram
-    participant S as StatsController
-    participant MA as MediaAritmetica
-    participant MP as MediaPonderata
-    participant PREV as MediaPrevisionale
-  
-    Note over S: Caricamento strategie
-    rect rgba(128, 128, 128, 0.13)
-    Note over S: getStatsData(userId)
-    S->>MA: calcola(esami)
-    MA-->>S: mediaA
-    S->>MP: calcola(esami)
-    MP-->>S: mediaP
-    S->>PREV: calcola(mediaP, cfu, target)
-    PREV-->>S: mediaFutura
+    Client->>LoginController: POST /login (email, pwd)
+    LoginController->>UtenteRepository: findByEmail(email)
+    UtenteRepository-->>LoginController: utente['password_hash']
+    Note over LoginController: password_verify(pwd, hash)
+    alt Password OK
+        LoginController->>Sessione: session_start()
+        LoginController->>Sessione: set user_id
+        LoginController-->>Client: 200 OK + User Info
+    else Errore
+        LoginController-->>Client: 401 Unauthorized
     end
-    Note over S: Consolidamento risultati
 ```
+
+### Flusso Completo API Statistiche
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Router
+    participant AuthMiddleware
+    participant StatsController
+    participant EsameRepository
+    participant Database
+    participant Strategies
+
+    Client->>Router: GET /api/stats
+    Router->>AuthMiddleware: isAuthenticated()
+    alt Session Valid
+        AuthMiddleware-->>StatsController: userId
+        rect rgba(128, 128, 128, 0.13)
+        Note over StatsController: getStatsData(userId)
+        StatsController->>EsameRepository: findByStudent(userId)
+        EsameRepository->>Database: SELECT * FROM esame WHERE studente = :id
+        Database-->>EsameRepository: ResultSet
+        EsameRepository-->>StatsController: ArrayEsami
+        StatsController->>Strategies: MediaAritmetica.calcola()
+        Strategies-->>StatsController: float
+        StatsController->>Strategies: MediaPonderata.calcola()
+        Strategies-->>StatsController: float
+        StatsController->>Strategies: MediaPrevisionale.calcola()
+        Strategies-->>StatsController: float
+        StatsController->>Strategies: DistribuzioneVoti.calcola()
+        Strategies-->>StatsController: array
+        StatsController->>Strategies: TrendMedie.calcola()
+        Strategies-->>StatsController: array
+        end
+        StatsController-->>Client: 200 OK + JSON Stats
+    else Session Invalid
+        AuthMiddleware-->>Client: 401 Unauthorized
+    else Database Error
+        Database-->>StatsController: Exception
+        StatsController-->>Client: 500 Internal Server Error
+    end
+```
+
+### Ciclo di Vita della Sessione
+
+```mermaid
+%%{init: {"theme": "default"}}%%
+stateDiagram-v2
+    [*] --> UtenteGuest
+    state UtenteGuest {
+        login: POST /login\nVerifica Credenziali
+    }
+    UtenteGuest --> SessioneAttiva : Successo
+    UtenteGuest --> UtenteGuest : Errore
+  
+    state SessioneAttiva {
+        stats: GET /stats
+        calc: Calcolo Statistiche
+        json: JSON
+        stats --> calc
+        calc --> json
+    }
+    SessioneAttiva --> [*] : Logout
+```
+
+---
+
+## 9. Gestione della Sicurezza
+
+Il sistema è progettato tenendo in considerazione le vulnerabilità classiche (OWASP Top 10).
+
+| Vulnerabilità                                  | Soluzione Architetturale adottata                                                                                                                                                                                                                                            |
+| :---------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SQL Injection**                         | Tutti i parametri nel database (`EsameDAO`, `UtenteDAO`) passano per l'oggetto `DatabaseWrapper` che sfrutta *PDO Prepared Statements* vincolanti (`stmt->execute(params)`), rendendo impossibile l'iniezione del codice SQL.                                      |
+| **Cross-Site Scripting (XSS)**            | Misure lato Front-end per validazione rigorosa su tutti i campi; popolamento sicuro del DOM usando metodi come `.textContent` anziché `.innerHTML` per iniettare le risposte o dati.                                                                                    |
+| **Bypass Controllo degli Accessi (IDOR)** | Ogni chiamata dipendente da uno student ID (es. Modifica o Eliminazione Esame) NON si affida a parametri espliciti facilmente falsificabili dal client (es.`?user_id=123`), ma preleva l'identificatore del *Tenant* direttamente dalla *Sessione Server Autenticata*. |
+| **Data Exposure e Crittografia**          | Le password utente non viaggiano e non permangono in chiaro; vengono conservate sul DB utilizzando l'algoritmo bcrypt nativo (`PASSWORD_BCRYPT`).                                                                                                                          |
+| **Mass Assignment**                       | Il componente `Request` (unitamente ai vari Controller) preleva rigorosamente dal payload in entrata solo le chiavi attese, scartando campi accessori malevoli (es. iniezione forzata di `admin=true`).                                                                  |
