@@ -1,16 +1,6 @@
 # Documentazione: Modulo Statistiche e Sicurezza
 
-## Progetto: Gestione Esami
-
-**Autore**: Fokou Frankel
-
-**Matricola**: 352559
-
-**Modulo**: [Backend - Statistiche e Autenticazione/Multiutenza](https://github.com/Progetti-ING-SW-INFO-UniPR/INGSW-2526-T7/tree/statistiche)
-
----
-
-### Sommario
+## Sommario
 
 Questa documentazione fornisce un'analisi dettagliata dei moduli **Statistiche (Analytics)** e **Sicurezza (Auth)** del sistema 'Gestione Esami'. Il documento descrive i requisiti funzionali (come il calcolo delle medie, le proiezioni di laurea e l'analisi dei trend), l'architettura del sistema basata su tre layer, e l'integrazione di design pattern fondamentali quali **Strategy**, **Repository** e **Middleware**. Sono inoltre inclusi dettagli sul processo di sviluppo iterativo, le modifiche allo schema del database, l'implementazione degli endpoint API e i protocolli di testing e verifica.
 
